@@ -1,9 +1,10 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -26,4 +27,12 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function checkDb()
+    {
+        if(DB::connection()->getDatabaseName())
+        {
+        echo "Yes! successfully connected to the DB: " . DB::connection()->getDatabaseName();
+        }
+    }
 }
