@@ -1,2 +1,2 @@
-- 👋 Hi, We are teccho, a software house based in Indonesia that worked on general solutions for your business.
-- 📫 Contact us at: teccho2022@gmail.com, and please add subject "Project Request" if you are a client or an investor interested in us
+# koperasiDS
+Credit Loan Accounting Software for Koperasi Damai Sejahtera
