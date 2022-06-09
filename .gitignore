@@ -1,6 +1,7 @@
-# /node_modules
+/node_modules
 /public/hot
 /public/storage
+/public/collateral_file
 /storage/*.key
 /vendor
 /.idea
@@ -9,4 +10,4 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-# .env
+.env
