@@ -286,9 +286,9 @@
     </div>
     <div id="divCustomer">
         <div class="toolbar">
-            <form method="post" action="{{ url('/customer/search') }}" style="font-family: Roboto; color:black" class="form-inline">
+            <form method="post" action="{{ url('/searchCustomer') }}" style="font-family: Roboto; color:black" class="form-inline">
                 {{ csrf_field() }}
-                <input type="text" name="search" class="form-control" placeholder="Name/KTP"/>
+                <input type="text" name="search" class="form-control" placeholder="Name/KTP/Customer Id"/>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa fa-search"></i> Search
                 </button>

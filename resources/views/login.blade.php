@@ -8,7 +8,7 @@
 @section('content')
     <br />
     <div class="container box">
-        <h2 align="center" style="color: #0877DE;"><img src="/assets/images/Logo.png" alt="KDS Logo"> Koperasi Damai Sejahtera</h2><br />
+        <h2 align="center" style="color: #0877DE;"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo"> Koperasi Damai Sejahtera</h2><br />
         <h3 align="center" style="color: #0877DE;">User Login</h3><br />
         
         @if ($message = Session::get('error'))

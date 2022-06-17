@@ -1,6 +1,6 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Transaction/incoming')
+@section('title', 'Transaction/Transaction Management')
  
 @section('sidebar')
 @stop
@@ -9,6 +9,7 @@
 <div class="container">
     @if (count($errors) > 0)
         <script>
+            var errors = {!! json_encode($errors->toArray()) !!};
             swal({
                 title: "Alert",
                 text: 'Add Customer Failed. Please check your data!!',
@@ -21,16 +22,30 @@
         </script>
     @endif
 
-    <div class="modal fade" id="modalIncoming" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+    @if(session()->has('message'))
+        <script>
+            swal({
+                title: "Alert",
+                text: '{{ session()->get("message") }}',
+                icon: "error",
+                type: "error",
+                buttons: {
+                    confirm: true
+                }
+            });
+        </script>
+    @endif
+
+    <div class="modal fade" id="modalTransaction" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Transaction</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/addIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/addTransaction') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addTransactionForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
@@ -46,9 +61,11 @@
                                 </div>
                                 <div class="col-sm-8">
                                     <select class="form-control selectpicker" id="category" name="category" data-size="5" data-live-search="true">
-                                        <option value="Capital">Capital</option>
-                                        <option value="Adjustment">Adjustment</option>
-                                        <option value="Others">Others</option>
+                                        <option value="Cash2Bank">Cash to Bank</option>
+                                        <option value="Bank2Cash">Bank to Cash</option>
+                                        <option value="BankInterest">Bank Interest</option>
+                                        <option value="BankTax">Bank Tax</option>
+                                        <option value="BankTrf">Bank Transfer</option>
                                     </select>
                                 </div>
                             </div>
@@ -58,14 +75,6 @@
                                 </div>
                                 <div class="col-sm-8 required">
                                     <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)"/> 
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-4">
-                                    <span for="" class="control-label">Notes</span>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" id="notes" name="notes" class="form-control" placeholder="notes"/>
                                 </div>
                             </div>
                         </form>
@@ -83,18 +92,18 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalEditIncoming" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+    <div class="modal fade" id="modalEditTransaction" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Transaction</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/editIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="editIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/editTransaction') }}" style="font-family: Roboto; color:black; font-size: 20px" id="modalEditTransaction" enctype="multipart/form-data">
                             {{ csrf_field() }}
-                            <input type="hidden" name="incomingId" id="editIncomingId" class="form-control" value="" hidden/>
+                            <input type="hidden" name="transactionId" id="editTransactionId" class="form-control" value="" hidden/>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Transaction Date</span>
@@ -109,9 +118,9 @@
                                 </div>
                                 <div class="col-sm-8">
                                     <select class="form-control selectpicker" id="editCategory" name="category" data-size="5" data-live-search="true">
-                                        <option value="Capital">Capital</option>
-                                        <option value="Adjustment">Adjustment</option>
-                                        <option value="Others">Others</option>
+                                        <option value="Cash2Bank">Cash to Bank</option>
+                                        <option value="Bank2Cash">Bank to Cash</option>
+                                        <option value="InterestTax">Bank Interest and Tax</option>
                                     </select>
                                 </div>
                             </div>
@@ -121,14 +130,6 @@
                                 </div>
                                 <div class="col-sm-8 required">
                                     <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)"/> 
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-4">
-                                    <span for="" class="control-label">Notes</span>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" id="editNotes" name="notes" class="form-control" placeholder="notes"/>
                                 </div>
                             </div>
                         </form>
@@ -146,16 +147,16 @@
         </div>
     </div>
 
-    <div id="divIncoming">
+    <div id="divTransaction">
         <div class="toolbar">
-            <form method="post" action="{{ url('/searchIncoming') }}" style="font-family: Roboto; color:black" class="form-inline">
+            <form method="post" action="{{ url('/searchTransaction') }}" style="font-family: Roboto; color:black" class="form-inline">
                 {{ csrf_field() }}
                 <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa fa-search"></i> Search
                 </button>
                 <div style="float: right">
-                    <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddIncomingModal()"><i class="fa fa-plus"></i> Add Incoming</button>
+                    <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddTransactionModal()"><i class="fa fa-plus"></i> Add Transaction</button>
                     {{-- <button id="addLoan" type="button" class="btn btn-primary" title="Add" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button> --}}
                 </div>
             </form>
@@ -168,40 +169,50 @@
                     <th>Transaction Date</th>
                     <th>Category</th>
                     <th>Amount</th>
-                    <th>Notes</th>
-                    <th>Action</th>
+                    <th>Cash Account</th>
+                    <th>Bank Account</th>
+                    {{-- <th>Action</th> --}}
                 </tr>
             </thead>
             <tbody>
-                @foreach ($incoming as $data)
+                @foreach ($transaction as $data)
                 <tr>
-                    <td>{{ ($incoming->currentPage()-1) * $incoming->perPage() + $loop->index + 1}}</td>
-                    <td>{{ str_pad($data->incoming_id, 4, '0', STR_PAD_LEFT)}}</td>
+                    <td>{{ ($transaction->currentPage()-1) * $transaction->perPage() + $loop->index + 1}}</td>
+                    <td>{{ str_pad($data->id, 4, '0', STR_PAD_LEFT)}}</td>
                     <td>
-                        @if($data->incoming_date != null)
-                            {{ date("d-M-Y", strtotime($data->incoming_date))}}
+                        {{ date("d-M-Y", strtotime($data->update_at))}}
+                    </td>
+                    <td>
+                        @if ($data->trx_category == 'Cash2Bank')
+                            Cash to Bank
+                        @elseif ($data->trx_category == 'Bank2Cash')
+                            Bank to Cash
+                        @elseif ($data->trx_category == 'BankTrf')
+                            Bank Transfer
+                        @elseif ($data->trx_category == 'BankTax')
+                            Bank Tax
+                        @elseif ($data->trx_category == 'BankInterest')
+                            Bank Interest
                         @else
-                            Due at {{ date("d-M-Y", strtotime($data->loan_due_date))}}
+                            {{ $data->trx_category }}
                         @endif
                     </td>
-                    <td>{{ $data->incoming_category}}</td>
-                    <td>{{ number_format($data->incoming_amount, 2, ',', '.')}}</td>
-                    <td style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
-                        {{ $data->notes}}
-                    </td>
-                    <td>
-                        @if($data->incoming_category != 'Installment')
-                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditIncomingModal('{{ $data->incoming_id}}')"><i class="fa fa-pen"></i></button>
-                        <button type="button" class="btn btn-danger" title="Edit" onclick="validateDelete('{{ $data->incoming_id}}')"><i class="fa fa-trash"></i></button>
+                    <td>{{ number_format($data->trx_amount, 2, ',', '.')}}</td>
+                    <td>{{ number_format($data->cash_account, 2, ',', '.')}}</td>
+                    <td>{{ number_format($data->bank_account, 2, ',', '.')}}</td>
+                    {{-- <td>
+                        @if ($data->trx_category != 'New Loan')
+                            <button type="button" class="btn btn-primary" title="Edit" onclick="showEditTransactionModal('{{ $data->id}}')"><i class="fa fa-pen"></i></button>
+                            <button type="button" class="btn btn-danger" title="Edit" onclick="validateDelete('{{ $data->id}}')"><i class="fa fa-trash"></i></button>
                         @endif
-                    </td>
+                    </td> --}}
                 </tr>
                 @endforeach
             </tbody>
         </table>
-        <p style="font-size: 15px">Showing {{($incoming->currentpage()-1)*$incoming->perpage()+1}} to {{ $incoming->currentpage()*(($incoming->perpage() < $incoming->total()) ? $incoming->perpage(): $incoming->total())}} of {{ $incoming->total()}} entries</p>
+        <p style="font-size: 15px">Showing {{($transaction->currentpage()-1)*$transaction->perpage()+1}} to {{ $transaction->currentpage()*(($transaction->perpage() < $transaction->total()) ? $transaction->perpage(): $transaction->total())}} of {{ $transaction->total()}} entries</p>
         <div class="contentSeg" style="text-align: center;">
-            {{ $incoming->links() }}
+            {{ $transaction->links() }}
         </div>
     </div>
 </div>
@@ -209,36 +220,25 @@
 
 @section('javascript')
     <script>
-        var incoming = {!! json_encode($incoming->toArray()) !!}.data;
+        var transaction = {!! json_encode($transaction->toArray()) !!}.data;
 
         $(function()
         {
             
         });
 
-        function showAddIncomingModal()
+        function showAddTransactionModal()
         {
-            $('#modalIncoming').modal('show');
+            $('#modalTransaction').modal('show');
         }
 
-        function showEditIncomingModal(id)
+        function showEditTransactionModal(id)
         {
-            var value = $.grep(incoming, function(v) {
-                return v.incoming_id == id;
+            var value = $.grep(transaction, function(v) {
+                return v.id == id;
             });
 
-            // assign value
-            var date = value[0].incoming_date.split(' ');
-            
-            $('#editIncomingId').val(value[0].incoming_id);
-            $('#editTransactionDate').val(date[0]);
-            $('#editAmount').val(value[0].incoming_amount.toString());
-            $('#editNotes').val(value[0].notes);
-            
-            $('#editCategory').val(value[0].incoming_category);
-            $('.selectpicker').selectpicker('refresh');
-
-            $('#modalEditIncoming').modal('show');
+            $('#modalEditTransaction').modal('show');
         }
 
         function validate(e)
@@ -250,7 +250,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#addIncomingForm').submit();
+                            $('#addTransactionForm').submit();
                             return true;
                         }
                     },
@@ -270,7 +270,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#editIncomingForm').submit();
+                            $('#modalEditTransaction').submit();
                             return true;
                         }
                     },
@@ -295,9 +295,9 @@
                                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                                 dataType : 'json',
                                 type: 'POST',
-                                url: "{{ url('/deleteIncoming') }}",
+                                url: '/deleteTransaction',
                                 data: {
-                                    incomingId : id
+                                    transactionId : id
                                 },
                                 success : function(result)
                                 {
@@ -305,12 +305,13 @@
                                     {
                                         $.confirm ({
                                             title: 'Alert',
-                                            content: 'Delete incoming success',
+                                            content: 'Delete transaction success',
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
-                                                        location.reload();
+                                                        var url = '/' + result.redirect;
+                                                        window.location = url;
                                                     }
                                                 }  
                                             }
@@ -320,7 +321,7 @@
                                     {
                                         $.confirm ({
                                             title: 'Alert',
-                                            content: 'Delete incoming Failed',
+                                            content: 'Delete transaction Failed',
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',
@@ -345,7 +346,7 @@
 @stop
 
 <style>
-    #divIncoming {
+    #divTransaction {
         font-family: Roboto;
         font-size: 18px;
     }

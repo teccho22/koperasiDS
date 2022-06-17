@@ -16,7 +16,7 @@
 
 <style>
     body {
-        background-image: url("/assets/images/Backgroundbg.png");
+        background-image: url("{{ URL::asset('assets/images/Backgroundbg.png') }}");
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: right; 

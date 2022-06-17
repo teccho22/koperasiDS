@@ -1,6 +1,6 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Transaction/incoming')
+@section('title', 'Transaction/outgoing')
  
 @section('sidebar')
 @stop
@@ -21,16 +21,16 @@
         </script>
     @endif
 
-    <div class="modal fade" id="modalIncoming" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+    <div class="modal fade" id="modalOutgoing" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Outgoing</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/addIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/addOutgoing') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addOutgoingForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
@@ -46,8 +46,10 @@
                                 </div>
                                 <div class="col-sm-8">
                                     <select class="form-control selectpicker" id="category" name="category" data-size="5" data-live-search="true">
-                                        <option value="Capital">Capital</option>
+                                        <option value="Salary">Salary</option>
+                                        <option value="Stationary">Stationary</option>
                                         <option value="Adjustment">Adjustment</option>
+                                        <option value="Devident">Devident</option>
                                         <option value="Others">Others</option>
                                     </select>
                                 </div>
@@ -83,18 +85,18 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalEditIncoming" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+    <div class="modal fade" id="modalEditOutgoing" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Outgoing</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/editIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="editIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/editOutgoing') }}" style="font-family: Roboto; color:black; font-size: 20px" id="editOutgoingForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
-                            <input type="hidden" name="incomingId" id="editIncomingId" class="form-control" value="" hidden/>
+                            <input type="hidden" name="outgoingId" id="editOutgoingId" class="form-control" value="" hidden/>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Transaction Date</span>
@@ -109,8 +111,10 @@
                                 </div>
                                 <div class="col-sm-8">
                                     <select class="form-control selectpicker" id="editCategory" name="category" data-size="5" data-live-search="true">
-                                        <option value="Capital">Capital</option>
+                                        <option value="Salary">Salary</option>
+                                        <option value="Stationary">Stationary</option>
                                         <option value="Adjustment">Adjustment</option>
+                                        <option value="Devident">Devident</option>
                                         <option value="Others">Others</option>
                                     </select>
                                 </div>
@@ -146,16 +150,16 @@
         </div>
     </div>
 
-    <div id="divIncoming">
+    <div id="divOutgoing">
         <div class="toolbar">
-            <form method="post" action="{{ url('/searchIncoming') }}" style="font-family: Roboto; color:black" class="form-inline">
+            <form method="post" action="{{ url('/searchOutgoing') }}" style="font-family: Roboto; color:black" class="form-inline">
                 {{ csrf_field() }}
                 <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa fa-search"></i> Search
                 </button>
                 <div style="float: right">
-                    <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddIncomingModal()"><i class="fa fa-plus"></i> Add Incoming</button>
+                    <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddOutgoingModal()"><i class="fa fa-plus"></i> Add Outgoing</button>
                     {{-- <button id="addLoan" type="button" class="btn btn-primary" title="Add" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button> --}}
                 </div>
             </form>
@@ -173,35 +177,31 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($incoming as $data)
+                @foreach ($outgoing as $data)
                 <tr>
-                    <td>{{ ($incoming->currentPage()-1) * $incoming->perPage() + $loop->index + 1}}</td>
-                    <td>{{ str_pad($data->incoming_id, 4, '0', STR_PAD_LEFT)}}</td>
+                    <td>{{ ($outgoing->currentPage()-1) * $outgoing->perPage() + $loop->index + 1}}</td>
+                    <td>{{ str_pad($data->outgoing_id, 4, '0', STR_PAD_LEFT)}}</td>
                     <td>
-                        @if($data->incoming_date != null)
-                            {{ date("d-M-Y", strtotime($data->incoming_date))}}
-                        @else
-                            Due at {{ date("d-M-Y", strtotime($data->loan_due_date))}}
-                        @endif
+                        {{ date("d-M-Y", strtotime($data->outgoing_date))}}
                     </td>
-                    <td>{{ $data->incoming_category}}</td>
-                    <td>{{ number_format($data->incoming_amount, 2, ',', '.')}}</td>
+                    <td>{{ $data->outgoing_category}}</td>
+                    <td>{{ number_format($data->outgoing_amount, 2, ',', '.')}}</td>
                     <td style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
                         {{ $data->notes}}
                     </td>
                     <td>
-                        @if($data->incoming_category != 'Installment')
-                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditIncomingModal('{{ $data->incoming_id}}')"><i class="fa fa-pen"></i></button>
-                        <button type="button" class="btn btn-danger" title="Edit" onclick="validateDelete('{{ $data->incoming_id}}')"><i class="fa fa-trash"></i></button>
+                        @if ($data->outgoing_category != 'New Loan')
+                            <button type="button" class="btn btn-primary" title="Edit" onclick="showEditOutgoingModal('{{ $data->outgoing_id}}')"><i class="fa fa-pen"></i></button>
+                            <button type="button" class="btn btn-danger" title="Edit" onclick="validateDelete('{{ $data->outgoing_id}}')"><i class="fa fa-trash"></i></button>
                         @endif
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-        <p style="font-size: 15px">Showing {{($incoming->currentpage()-1)*$incoming->perpage()+1}} to {{ $incoming->currentpage()*(($incoming->perpage() < $incoming->total()) ? $incoming->perpage(): $incoming->total())}} of {{ $incoming->total()}} entries</p>
+        <p style="font-size: 15px">Showing {{($outgoing->currentpage()-1)*$outgoing->perpage()+1}} to {{ $outgoing->currentpage()*(($outgoing->perpage() < $outgoing->total()) ? $outgoing->perpage(): $outgoing->total())}} of {{ $outgoing->total()}} entries</p>
         <div class="contentSeg" style="text-align: center;">
-            {{ $incoming->links() }}
+            {{ $outgoing->links() }}
         </div>
     </div>
 </div>
@@ -209,36 +209,36 @@
 
 @section('javascript')
     <script>
-        var incoming = {!! json_encode($incoming->toArray()) !!}.data;
+        var outgoing = {!! json_encode($outgoing->toArray()) !!}.data;
 
         $(function()
         {
             
         });
 
-        function showAddIncomingModal()
+        function showAddOutgoingModal()
         {
-            $('#modalIncoming').modal('show');
+            $('#modalOutgoing').modal('show');
         }
 
-        function showEditIncomingModal(id)
+        function showEditOutgoingModal(id)
         {
-            var value = $.grep(incoming, function(v) {
-                return v.incoming_id == id;
+            var value = $.grep(outgoing, function(v) {
+                return v.outgoing_id == id;
             });
 
             // assign value
-            var date = value[0].incoming_date.split(' ');
+            var date = value[0].outgoing_date.split(' ');
             
-            $('#editIncomingId').val(value[0].incoming_id);
+            $('#editOutgoingId').val(value[0].outgoing_id);
             $('#editTransactionDate').val(date[0]);
-            $('#editAmount').val(value[0].incoming_amount.toString());
+            $('#editAmount').val(value[0].outgoing_amount.toString());
             $('#editNotes').val(value[0].notes);
             
-            $('#editCategory').val(value[0].incoming_category);
+            $('#editCategory').val(value[0].outgoing_category);
             $('.selectpicker').selectpicker('refresh');
 
-            $('#modalEditIncoming').modal('show');
+            $('#modalEditOutgoing').modal('show');
         }
 
         function validate(e)
@@ -250,7 +250,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#addIncomingForm').submit();
+                            $('#addOutgoingForm').submit();
                             return true;
                         }
                     },
@@ -270,7 +270,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#editIncomingForm').submit();
+                            $('#editOutgoingForm').submit();
                             return true;
                         }
                     },
@@ -295,9 +295,9 @@
                                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                                 dataType : 'json',
                                 type: 'POST',
-                                url: "{{ url('/deleteIncoming') }}",
+                                url: "{{ url('/deleteOutgoing') }}",
                                 data: {
-                                    incomingId : id
+                                    outgoingId : id
                                 },
                                 success : function(result)
                                 {
@@ -305,7 +305,7 @@
                                     {
                                         $.confirm ({
                                             title: 'Alert',
-                                            content: 'Delete incoming success',
+                                            content: 'Delete outgoing success',
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',
@@ -320,7 +320,7 @@
                                     {
                                         $.confirm ({
                                             title: 'Alert',
-                                            content: 'Delete incoming Failed',
+                                            content: 'Delete outgoing Failed',
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',
@@ -345,7 +345,7 @@
 @stop
 
 <style>
-    #divIncoming {
+    #divOutgoing {
         font-family: Roboto;
         font-size: 18px;
     }

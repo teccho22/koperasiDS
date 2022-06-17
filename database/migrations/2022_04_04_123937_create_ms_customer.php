@@ -32,7 +32,7 @@ class CreateMsCustomer extends Migration
             $table->integer('created_by');
             $table->dateTime('created_at')->useCurrent();
             $table->integer('updated_by');
-            $table->dateTime('updated_at')->useCurrentOnUpdate();
+            $table->dateTime('updated_at')->useCurrent();
         });
     }
 

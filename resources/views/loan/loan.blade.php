@@ -213,7 +213,7 @@
             <div class="col-sm-6">
                 <div class="row">
                     <span class="col-sm-6">ID</span>
-                    <span class="col-sm-6" style="color:#959797;">: {{ $customer->customer_id }}</span>
+                    <span class="col-sm-6" style="color:#959797;" id="isBlacklist">: {{ $customer->customer_id }}</span>
                 </div>
                 <div class="row">
                     <span class="col-sm-6">Name</span>
@@ -237,7 +237,8 @@
         </div>
     </div>
     <div class="container" style="padding: 20px; padding-right: 100px">
-        <button id="btnPrint" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;">Blacklist</button>
+        <button id="btnBlacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;" onclick="blacklist('{{ $customer->customer_id }}')">Blacklist</button>
+        <button id="btnUnblacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;" onclick="unblacklist('{{ $customer->customer_id }}')">Unblacklist</button>
         <button id="btnPrint" type="button" class="btn btn-primary mr-4" title="Add" style="float: right; margin: 5px;">Print</button>
     </div>
     <div class="container custDetail">
@@ -282,7 +283,7 @@
                     <td>{{ number_format($data->loan_amount, 2, ',', '.')}}</td>
                     <td>{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
                     <td>{{ $data->tenor}}</td>
-                    <td style="word-wrap: normal; max-width: 250px;">
+                    <td style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
                         @if($data->collateral_description != null)
                             {{ $data->collateral_description}}
                         @else
@@ -290,8 +291,8 @@
                         @endif
                     </td>
                     <td>
-                        <button id="payInstallment" type="button" class="btn btn-primary" title="Pay" onclick="showPayLoanModal('{{ $data->loan_id }}', '{{ $data->loan_number}}')">Pay</button>
-                        <button id="editLoan" type="button" class="btn btn-primary" title="Edit" onclick="showEditLoanModal({{ $data->loan_id }})"><i class="fa fa-pen"></i> Edit</button>
+                        <button id="payInstallment" type="button" class="btn btn-primary" title="Pay" onclick="showPayLoanModal('{{ $data->loan_id }}', '{{ $data->loan_number}}');">Pay</button>
+                        <button id="editLoan" type="button" class="btn btn-primary" title="Edit" onclick="showEditLoanModal({{ $data->loan_id }});"><i class="fa fa-pen"></i> Edit</button>
                     </td>
                 </tr>
                 <tr id="hiddenLoan{{ $loop->index }}" class="hidden_row">
@@ -340,7 +341,26 @@
         var loanList = {!! json_encode($loanList->toArray()) !!}.data;
         var incomingList = {!! json_encode($incomings->toArray()) !!};
         var index = 1;
+        var customer = {!! json_encode($customer) !!};
         // console.log({!! json_encode($incomings->toArray()) !!});
+
+        $(function()
+        {
+            console.log(customer);
+            if(customer.is_blacklist == 1)
+            {
+                $('#addLoan').hide();
+                $('#isBlacklist').append(' <span style="color:red;border: 1px solid red; border-radius: 20px;background-color:#ffcaca;padding:5px;">BLACKLIST</span>');
+
+                $('#btnBlacklist').hide();
+                $('#btnUnblacklist').show();
+            }
+            else
+            {
+                $('#btnBlacklist').show();
+                $('#btnUnblacklist').hide();
+            }
+        });
 
         $('input[type="file"]').on('change', function() {
             var val = $(this).val();
@@ -358,6 +378,7 @@
             var loan = $.grep(loanList, function(v) {
                 return v.loan_id === id;
             });
+            console.log(loan);
 
             $('#editLoanId').val(id);
             $('#editCollateralCategory').val(loan[0]['collateral_category']);
@@ -654,7 +675,7 @@
                                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                                 dataType : 'json',
                                 type: 'POST',
-                                url: '/payLoan',
+                                url: "{{ url('/payLoan') }}",
                                 data: {
                                     data : JSON.stringify(data),
                                     loanId : $('#payLoanId').val(),
@@ -663,7 +684,131 @@
                                 success : function(result)
                                 {
                                     var url = '/' + result.redirect + '/' + result.custId;
-                                    window.location = url;
+                                    location.reload();
+                                }
+                            });
+                        }
+                    },
+                    cancel: function(){
+                        // return false;
+                    }
+                }
+            });
+        }
+
+        function blacklist(id)
+        {
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to blacklist this user?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+
+                            $.ajax
+                            ({
+                                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                                dataType : 'json',
+                                type: 'POST',
+                                url: "{{ url('/blacklist') }}",
+                                data: {
+                                    customerId : id
+                                },
+                                success : function(result)
+                                {
+                                    if (result.errNum == 0)
+                                    {
+                                        $.confirm ({
+                                            title: 'Alert',
+                                            content: 'Blacklist success',
+                                            buttons: { 
+                                                ok: {
+                                                    btnClass: 'btn-primary',
+                                                    action: function(){
+                                                        var url = '/' + result.redirect + '/' + result.custId;
+                                                        location.reload();
+                                                    }
+                                                }  
+                                            }
+                                        })
+                                    }
+                                    else{
+                                        $.confirm ({
+                                            title: 'Alert',
+                                            content: 'Blacklist Failed',
+                                            buttons: { 
+                                                ok: {
+                                                    btnClass: 'btn-primary',
+                                                    action: function(){
+                                                        
+                                                    }
+                                                }  
+                                            }
+                                        })
+                                    }
+                                }
+                            });
+                        }
+                    },
+                    cancel: function(){
+                        // return false;
+                    }
+                }
+            });
+        }
+
+        function unblacklist(id)
+        {
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to unblacklist this user?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+
+                            $.ajax
+                            ({
+                                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                                dataType : 'json',
+                                type: 'POST',
+                                url: "{{ url('/unblacklist') }}",
+                                data: {
+                                    customerId : id
+                                },
+                                success : function(result)
+                                {
+                                    if (result.errNum == 0)
+                                    {
+                                        $.confirm ({
+                                            title: 'Alert',
+                                            content: 'Unblacklist success',
+                                            buttons: { 
+                                                ok: {
+                                                    btnClass: 'btn-primary',
+                                                    action: function(){
+                                                        var url = '/' + result.redirect + '/' + result.custId;
+                                                        location.reload();
+                                                    }
+                                                }  
+                                            }
+                                        })
+                                    }
+                                    else{
+                                        $.confirm ({
+                                            title: 'Alert',
+                                            content: 'Unblacklist Failed',
+                                            buttons: { 
+                                                ok: {
+                                                    btnClass: 'btn-primary',
+                                                    action: function(){
+                                                        
+                                                    }
+                                                }  
+                                            }
+                                        })
+                                    }
                                 }
                             });
                         }

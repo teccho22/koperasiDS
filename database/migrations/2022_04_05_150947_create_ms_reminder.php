@@ -25,7 +25,7 @@ class CreateMsReminder extends Migration
             $table->integer('created_by');
             $table->dateTime('created_at')->useCurrent();
             $table->integer('updated_by');
-            $table->dateTime('updated_at')->useCurrentOnUpdate();
+            $table->dateTime('updated_at')->useCurrent();
 
             $table->foreign('customer_id')->references('customer_id')->on('ms_customers');
         });

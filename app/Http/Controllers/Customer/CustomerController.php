@@ -176,6 +176,27 @@ class CustomerController extends Controller
                         
                 if ($loan)
                 {
+                    $outgoing = DB::table('ms_outgoings')->insertGetId([
+                        'loan_id'           => $loan,
+                        'outgoing_category' => 'New Loan',
+                        'outgoing_date'     => date('Y-m-d H:i:s'),
+                        'outgoing_amount'   => $request->loanAmount,
+                        'update_at' => date('Y-m-d H:i:s'),
+                        'create_at' => date('Y-m-d H:i:s'),
+                        'is_active' => 1,
+                        'create_by' => 3,
+                        'update_by' => 3
+                    ]);
+
+                    $transaction = DB::table('trx_account_mgmt')->insertGetId([
+                        'outgoing_id'       => $outgoing,
+                        'trx_category'      => 'Outgoing',
+                        'update_at'         => date('Y-m-d H:i:s'),
+                        'create_at'         => date('Y-m-d H:i:s'),
+                        'is_active'         => 1,
+                        'create_by'         => 3,
+                        'update_by'         => 3
+                    ]);
                     // loan status
                     // 1 : Haven't due yet
                     // 2 : Due 
@@ -198,6 +219,16 @@ class CustomerController extends Controller
                                 'update_by' => 3
                             ]
                         );
+
+                        $transaction = DB::table('trx_account_mgmt')->insertGetId([
+                            'incoming_id'       => $incoming,
+                            'trx_category'      => 'Incoming',
+                            'update_at'         => date('Y-m-d H:i:s'),
+                            'create_at'         => date('Y-m-d H:i:s'),
+                            'is_active'         => 1,
+                            'create_by'         => 3,
+                            'update_by'         => 3
+                        ]);
 
                         if (!$incoming)
                         {
@@ -281,5 +312,33 @@ class CustomerController extends Controller
                 return redirect()->route('customer')->with(['errors' => 'Input Data Failed!!']);
             }
         }
+    }
+
+    function searchCustomer(Request $request)
+    {
+        $customer = DB::table('customers')->where('customer_id', $request->search)
+                                        ->orWhere('customer_name', $request->search)
+                                        ->orWhere('customer_id_number', $request->search)
+                                        ->where('is_active', 1)
+                                        ->paginate(10);
+
+
+        $agentList = DB::table('customers')
+                        ->select('customer_agent')
+                        ->distinct()
+                        ->where('is_active', 1)
+                        ->get(['customer_agent']);
+
+        $jobList = DB::table('customers')
+                        ->select('customer_proffesion')
+                        ->distinct()
+                        ->where('is_active', 1)
+                        ->get(['customer_proffesion']);
+
+        return view('customer/customer', [
+            'customer' => $customer,
+            'agentList' => $agentList,
+            'jobList' => $jobList
+        ]);
     }
 }

@@ -39,6 +39,18 @@ class LoanController extends Controller
             {
                 array_push($loanIds,$loan->loan_id);
 
+                $checkIncoming = DB::table('ms_incomings')->where('loan_id', $loan->loan_id)
+                    ->where('is_active', 1)
+                    ->where('incoming_category', 'Installment')
+                    ->where('loan_status', 'Due')
+                    ->whereDate(DB::raw("(DATE_FORMAT(DATE_ADD(loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d'))"), '<', date('Y-m-d'))
+                    ->update(
+                        [
+                            'loan_status' => 'Overdue',
+                            'update_at' => date('Y-m-d H:i:s')
+                        ]
+                    );
+
                 $checkCollectLoan = DB::select("
                     SELECT
                         count(i.loan_due_date) as CountOverdue
@@ -51,6 +63,7 @@ class LoanController extends Controller
                         AND l.loan_id = i.loan_id
                         AND DATE_FORMAT(DATE_ADD(i.loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d') < DATE_FORMAT(NOW(),'%Y-%m-%d')
                         AND i.incoming_category = 'Installment'
+                        AND i.loan_status = 'Overdue'
                         AND l.is_active = 1
                         AND i.is_active = 1
                 ")[0]->CountOverdue;
@@ -84,6 +97,22 @@ class LoanController extends Controller
                             , update_at = NOW()
                         where
                             customer_id = '$id'
+                            AND loan_id='$loan->loan_id'
+                            AND is_active = 1
+                    ");
+                }
+                else
+                {
+                    DB::statement("update ms_loans set loan_dpd = 0, update_at = NOW() WHERE loan_id='$loan->loan_id' AND is_active=1");
+
+                    DB::statement("
+                        update ms_loans
+                        set
+                            loan_collect = 1
+                            , update_at = NOW()
+                        where
+                            customer_id = '$id'
+                            AND loan_id='$loan->loan_id'
                             AND is_active = 1
                     ");
                 }
@@ -100,18 +129,6 @@ class LoanController extends Controller
                     AND incoming_category = 'Installment' 
                     AND loan_id IN ($ids) AND DATE_FORMAT(NOW(),'%Y-%m-%d') BETWEEN DATE_FORMAT(loan_due_date,'%Y-%m-%d') AND DATE_FORMAT(DATE_ADD(loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d')
             ");
-    
-            $checkIncoming = DB::table('ms_incomings')->whereIn('loan_id', $loanIds)
-                                                    ->where('is_active', 1)
-                                                    ->where('incoming_category', 'Installment')
-                                                    ->where('loan_status', 'Due')
-                                                    ->whereDate(DB::raw("(DATE_FORMAT(DATE_ADD(loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d'))"), '<', date('Y-m-d'))
-                                                    ->update(
-                                                        [
-                                                            'loan_status' => 'Overdue',
-                                                            'update_at' => date('Y-m-d H:i:s')
-                                                        ]
-                                                    );
 
             $checkCollectCustomer = DB::select("
                 SELECT
@@ -126,6 +143,7 @@ class LoanController extends Controller
                     AND l.loan_id = i.loan_id
                     AND DATE_FORMAT(DATE_ADD(i.loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d') < DATE_FORMAT(NOW(),'%Y-%m-%d')
                     AND i.incoming_category = 'Installment'
+                    AND i.loan_status = 'Overdue'
                     AND c.is_active = 1
                     AND l.is_active = 1
                     AND i.is_active = 1
@@ -144,6 +162,29 @@ class LoanController extends Controller
                         AND is_active = 1
                 ");
             }
+            else
+            {
+                DB::statement("
+                    update customers
+                    set
+                        customer_collect = 1
+                        , updated_at = NOW()
+                    where
+                        customer_id = '$id'
+                        AND is_active = 1
+                ");
+            }
+
+            $checkBlacklist = DB::statement("
+                update customers
+                set
+                    is_blacklist = 1
+                    , updated_at = NOW()
+                where
+                    customer_id = '$id'
+                    AND customer_collect = 5
+                    AND is_active = 1
+            ");
                                                     
             $incoming = DB::table('ms_incomings')->whereIn('loan_id', $loanIds)
                                                 ->where('is_active', 1)
@@ -257,6 +298,53 @@ class LoanController extends Controller
         
             if ($loan)
             {
+                $outgoing = DB::table('ms_outgoings')->insertGetId([
+                    'loan_id'           => $loan,
+                    'outgoing_category' => 'New Loan',
+                    'outgoing_date'     => date('Y-m-d H:i:s'),
+                    'outgoing_amount'   => $request->loanAmount,
+                    'update_at' => date('Y-m-d H:i:s'),
+                    'create_at' => date('Y-m-d H:i:s'),
+                    'is_active' => 1,
+                    'create_by' => 3,
+                    'update_by' => 3
+                ]);
+
+                $cashAccount = DB::select("
+                    SELECT 
+                        cash_account,
+                        bank_account                    
+                    FROM 
+                        trx_account_mgmt 
+                    WHERE 
+                        id = (SELECT max(id) from trx_account_mgmt where is_active=1)
+                        and is_active=1
+                ");
+
+                if (sizeof($cashAccount) > 0)
+                {
+                    $total = $cashAccount[0]->cash_account - $request->amount;
+                    $bank_account = $cashAccount[0]->bank_account;
+                }
+                else
+                {
+                    $total=0;
+                    $bank_account = 0;
+                }
+
+                $transaction = DB::table('trx_account_mgmt')->insertGetId([
+                    'outgoing_id'       => $outgoing,
+                    'trx_category'      => 'Outgoing',
+                    'trx_amount'        => $request->loanAmount,
+                    'cash_account'      => $total,
+                    'bank_account'      => $bank_account,
+                    'update_at'         => date('Y-m-d H:i:s'),
+                    'create_at'         => date('Y-m-d H:i:s'),
+                    'is_active'         => 1,
+                    'create_by'         => 3,
+                    'update_by'         => 3
+                ]);
+                
                 $tenor = $request->tenor;
                 $date = date('Y-m-d');
                 for ($i=0; $i < $tenor; $i++) { 
@@ -381,7 +469,7 @@ class LoanController extends Controller
                     AND i.loan_status NOT IN ('Paid')
             ");
 
-            $outstanding = $payData->amount - $installmentAmount[0]->outstanding;
+            $outstanding = $payData->amount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
             if($outstanding < 0)
             {
                 // partial pay
@@ -511,6 +599,47 @@ class LoanController extends Controller
                 }
             }
 
+            $cashAccount = DB::select("
+                SELECT 
+                    cash_account,
+                    bank_account                     
+                FROM 
+                    trx_account_mgmt 
+                WHERE 
+                    id = (SELECT max(id) from trx_account_mgmt where is_active=1)
+                    and is_active=1    
+            ");
+
+            $incomingStatus = DB::select("
+                SELECT
+                    loan_status,
+                    incoming_amount
+                FROM
+                    ms_incomings
+                WHERE
+                    incoming_id = '$payData->incomingId'
+                    AND loan_id = '$request->loanId'
+                    AND is_active = 1
+            ");
+
+            if ($incomingStatus[0]->loan_status == 'Paid')
+            {
+                $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
+                
+                $transaction = DB::table('trx_account_mgmt')->insert([
+                    'trx_category'      => 'Incoming',
+                    'trx_amount'        => $incomingStatus[0]->incoming_amount,
+                    'incoming_id'       => $payData->incomingId,
+                    'cash_account'      => $total,
+                    'bank_account'      => $cashAccount[0]->bank_account,
+                    'is_active'         => 1,
+                    'create_by'         => 3,
+                    'create_at'        => date('Y-m-d H:i:s'),
+                    'update_by'        => 3,
+                    'update_at'        => date('Y-m-d H:i:s')
+                ]);
+            }
+
         }
 
         DB::commit();
@@ -528,11 +657,18 @@ class LoanController extends Controller
                                         ->where('is_active', 1)
                                         ->first();
 
-        $loanList = DB::table('ms_loans')->where('loan_id', $request->search)
+        $loanList = DB::table('ms_loans')->where('loan_number', $request->search)
                                         ->where('is_active', 1)
+                                        ->where('customer_id', $request->custId)
                                         ->paginate(10);
+                                        
+        $loanIds = [];
+        foreach($loanList as $loan)
+        {
+            array_push($loanIds,$loan->loan_id);
+        }
 
-        $incoming = DB::table('ms_incomings')->where('loan_id', $request->search)
+        $incoming = DB::table('ms_incomings')->whereIn('loan_id', $loanIds)
                                         ->where('is_active', 1)
                                         ->get();
 
@@ -541,5 +677,77 @@ class LoanController extends Controller
             'loanList' => $loanList,
             'incomings' => $incoming
         ]);
+    }
+
+    function blacklist(Request $request)
+    {
+        $rules = [
+            'customerId'         => 'required'
+        ];
+
+        if ($this->validate($request, $rules))
+        {
+            $blacklist = DB::table('customers')
+                        ->where('customer_id', $request->customerId)
+                        ->where('is_active', 1)
+                        ->where('is_blacklist', 0)
+                        ->orWhere('is_blacklist', null)
+                        ->update([
+                            'is_blacklist' => 1,
+                            'updated_at' => date('Y-m-d H:i:s')
+                        ]);
+            
+            if($blacklist)
+            {
+                return response()->json([
+                    'errNum' => 0,
+                    'errStr' => 'Blacklist Success',
+                    'redirect' => 'loan',
+                    'custId' => $request->customerId
+                ]);
+            }
+            else{
+                return response()->json([
+                    'errNum' => 1,
+                    'errStr' => 'Blacklist Failed'
+                ]);
+            }
+        }
+    }
+
+    function unblacklist(Request $request)
+    {
+        $rules = [
+            'customerId'         => 'required'
+        ];
+
+        if ($this->validate($request, $rules))
+        {
+            $blacklist = DB::table('customers')
+                        ->where('customer_id', $request->customerId)
+                        ->where('is_active', 1)
+                        ->where('is_blacklist', 1)
+                        ->orWhere('is_blacklist', null)
+                        ->update([
+                            'is_blacklist' => 0,
+                            'updated_at' => date('Y-m-d H:i:s')
+                        ]);
+            
+            if($blacklist)
+            {
+                return response()->json([
+                    'errNum' => 0,
+                    'errStr' => 'Unblacklist Success',
+                    'redirect' => 'loan',
+                    'custId' => $request->customerId
+                ]);
+            }
+            else{
+                return response()->json([
+                    'errNum' => 1,
+                    'errStr' => 'Unblacklist Failed'
+                ]);
+            }
+        }
     }
 }

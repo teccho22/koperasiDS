@@ -22,7 +22,7 @@ class CreateUsersTable extends Migration
             $table->integer('created_by')->default(0);
             $table->dateTime('created_at')->useCurrent();
             $table->integer('updated_by')->default(0);
-            $table->dateTime('updated_at')->useCurrentOnUpdate();
+            $table->dateTime('updated_at')->useCurrent();
         });
     }
 

@@ -5,24 +5,25 @@ namespace App\Http\Controllers\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use DB;
+use Session;
 
-class IncomingController extends Controller
+class OutgoingController extends Controller
 {
     //
     function index()
     {
-        $incoming = DB::table('ms_incomings')
+        $outgoing = DB::table('ms_outgoings')
                     ->where('is_active', 1)
-                    ->orderBy('loan_due_date', 'asc')
-                    ->orderBy('incoming_date', 'asc')
+                    ->orderBy('outgoing_id', 'asc')
+                    ->orderBy('outgoing_date', 'asc')
                     ->paginate(10);
 
-        return view('transaction/incoming', [
-            'incoming' => $incoming
+        return view('transaction/outgoing', [
+            'outgoing' => $outgoing
         ]);
     }
 
-    function addIncoming(Request $request)
+    function addOutgoing(Request $request)
     {
         $rules = [
             'transactionDate'  => 'required',
@@ -32,11 +33,11 @@ class IncomingController extends Controller
 
         if ($this->validate($request, $rules))
         {
-            $incoming = DB::table('ms_incomings')->insertGetId(
+            $outgoing = DB::table('ms_outgoings')->insertGetId(
                 [
-                    'incoming_category' => $request->category,
-                    'incoming_amount'   => $request->amount,
-                    'incoming_date'     => $request->transactionDate,
+                    'outgoing_category' => $request->category,
+                    'outgoing_amount'   => $request->amount,
+                    'outgoing_date'     => $request->transactionDate,
                     'notes'             => ($request->notes ? $request->notes:''),
                     'update_at'         => date('Y-m-d H:i:s'),
                     'create_at'         => date('Y-m-d H:i:s'),
@@ -56,21 +57,22 @@ class IncomingController extends Controller
                     id = (SELECT max(id) from trx_account_mgmt where is_active=1)
                     and is_active=1    
             ");
+
             if (sizeof($cashAccount) > 0)
             {
-                $total = $cashAccount[0]->cash_account + $request->amount;
+                $total = $cashAccount[0]->cash_account - $request->amount;
                 $bank_account = $cashAccount[0]->bank_account;
             }
             else
             {
-                $total=$request->amount;
+                $total=0;
                 $bank_account = 0;
             }
                 
             $transaction = DB::table('trx_account_mgmt')->insert([
-                'trx_category'      => 'Incoming',
+                'trx_category'      => 'Outgoing',
                 'trx_amount'        => $request->amount,
-                'incoming_id'       => $incoming,
+                'incoming_id'       => $outgoing,
                 'cash_account'      => $total,
                 'bank_account'      => $bank_account,
                 'is_active'         => 1,
@@ -80,24 +82,23 @@ class IncomingController extends Controller
                 'update_at'        => date('Y-m-d H:i:s')
             ]);
 
-            if ($incoming)
+            if ($outgoing)
             {
                 DB::commit();
-                return redirect()->route('incoming')->with(['success' => 'Data Berhasil Disimpan!']);
+                return redirect()->route('outgoing')->with(['success' => 'Data Berhasil Disimpan!']);
             }
             else
             {
                 DB::rollback();
-                return redirect()->route('incoming')->with(['error' => 'Input Data Failed!!']);
+                return redirect()->route('outgoing')->with(['error' => 'Input Data Failed!!']);
             }
         }
-
     }
 
-    function editIncoming(Request $request)
+    function editOutgoing(Request $request)
     {
         $rules = [
-            'incomingId'       => 'required',
+            'outgoingId'       => 'required',
             'transactionDate'  => 'required',
             'category'         => 'required',
             'amount'           => 'required',
@@ -106,44 +107,44 @@ class IncomingController extends Controller
 
         if ($this->validate($request, $rules))
         {
-            $incoming = DB::table('ms_incomings')
-                ->where('incoming_id', $request->incomingId)
+            $outgoing = DB::table('ms_outgoings')
+                ->where('outgoing_id', $request->outgoingId)
                 ->where('is_active', 1)
                 ->update([
-                        'incoming_category' =>$request->category,
-                        'incoming_amount'=>$request->amount,
-                        'incoming_date'=>$request->transactionDate,
+                        'outgoing_category' =>$request->category,
+                        'outgoing_amount'=>$request->amount,
+                        'outgoing_date'=>$request->transactionDate,
                         'notes'=>$request->notes
                 ]);
 
-            if ($incoming)
+            if ($outgoing)
             {
                 DB::commit();
-                return redirect()->route('incoming')->with(['success' => 'Data Berhasil Disimpan!']);
+                return redirect()->route('outgoing')->with(['success' => 'Data Berhasil Disimpan!']);
             }
             else
             {
                 DB::rollback();
-                return redirect()->route('incoming')->with(['error' => 'Input Data Failed!!']);
+                return redirect()->route('outgoing')->with(['error' => 'Input Data Failed!!']);
             }
         }
 
     }
 
-    function deleteIncoming(Request $request)
+    function deleteOutgoing(Request $request)
     {
 
-        if ($request->incomingId)
+        if ($request->outgoingId)
         {
-            $incoming = DB::table('ms_incomings')
-                ->where('incoming_id', $request->incomingId)
+            $outgoing = DB::table('ms_outgoings')
+                ->where('outgoing_id', $request->outgoingId)
                 ->where('is_active', 1)
                 ->update([
                         'is_active' => 0
                 ]);
-
+            
             $transaction = DB::table('trx_account_mgmt')
-                ->where('incoming_id', $request->incomingId)
+                ->where('outgoing_id', $request->outgoingId)
                 ->where('is_active', 1)
                 ->update([
                         'is_active' => 0
@@ -153,7 +154,7 @@ class IncomingController extends Controller
             return response()->json([
                 'errNum' => 0,
                 'errStr' => 'Delete Success',
-                'redirect' => 'incoming'
+                'redirect' => 'outgoing'
             ]);
         }
         else
