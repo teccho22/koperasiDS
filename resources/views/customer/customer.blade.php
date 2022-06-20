@@ -517,7 +517,7 @@
                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                 dataType : 'json',
                 type: 'POST',
-                url: '/customer/getEditData',
+                url: "{{ url('/customer/getEditData') }}",
                 data: {
                     id : id
                 },

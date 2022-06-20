@@ -739,7 +739,7 @@ class LoanController extends Controller
                                         ->where('is_active', 1)
                                         ->first();
 
-        $loanList = DB::table('ms_loans')->where('loan_number', $request->search)
+        $loanList = DB::table('ms_loans')->where('loan_number', 'like', '%'.$request->search.'%')
                                         ->where('is_active', 1)
                                         ->where('customer_id', $request->custId)
                                         ->paginate(10);
@@ -754,10 +754,17 @@ class LoanController extends Controller
                                         ->where('is_active', 1)
                                         ->get();
 
+        $collateralList = DB::table('ms_loans')
+                                        ->select('collateral_category')
+                                        ->distinct()
+                                        ->where('is_active', 1)
+                                        ->get(['collateral_category']);
+
         return view('loan/loan', [
             'customer' => $customer,
             'loanList' => $loanList,
-            'incomings' => $incoming
+            'incomings' => $incoming,
+            'collateralList' => $collateralList
         ]);
     }
 

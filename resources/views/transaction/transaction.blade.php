@@ -66,7 +66,7 @@
                                         <option value="BankInterest">Bank Interest</option>
                                         <option value="BankTax">Bank Tax</option>
                                         <option value="BankTrf">Bank Transfer</option>
-                                        <option value="Cash">Add Cash</option>
+                                        <option value="Cash">Input Cash</option>
                                     </select>
                                 </div>
                             </div>
@@ -296,7 +296,7 @@
                                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                                 dataType : 'json',
                                 type: 'POST',
-                                url: '/deleteTransaction',
+                                url: "{{ url('/deleteOutgoing') }}",
                                 data: {
                                     transactionId : id
                                 },
