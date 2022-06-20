@@ -78,7 +78,6 @@
         font-size: 40px;
         font-weight: 400;
         line-height: 45px;
-        letter-spacing: 0em;
         text-align: left;
         height: auto;
         flex: 1;
@@ -203,7 +202,7 @@
     }
 
     .jconfirm {
-        font-family: Roboto;
+        font-family: Righteous;
         font-size: 15px;
         line-height: normal !important;
     }

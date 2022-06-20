@@ -16,7 +16,7 @@ use Session;
 // 2 : Due 
 // 3 : Paid
 // 4 : Overdue
-// 5 : Partial Pay
+// 5 : Not Fully Paid
 
 class LoanController extends Controller
 {
@@ -31,6 +31,12 @@ class LoanController extends Controller
                                         ->where('is_active', 1)
                                         ->orderBy('customer_id', 'asc')
                                         ->paginate(10);
+
+        $collateralList = DB::table('ms_loans')
+                        ->select('collateral_category')
+                        ->distinct()
+                        ->where('is_active', 1)
+                        ->get(['collateral_category']);
 
         if (sizeof($loanList) > 0)
         {
@@ -149,6 +155,42 @@ class LoanController extends Controller
                     AND i.is_active = 1
             ")[0]->countOverdue;
 
+            $checkCustomerActiveLoan = DB::select("
+                SELECT
+                    count(l.loan_id) as countLoan
+                FROM
+                    customers c,
+                    ms_loans l
+                WHERE
+                    c.customer_id = '$id'
+                    AND l.customer_id = c.customer_id
+                    AND c.is_active = 1
+                    AND l.is_active = 1
+                    AND l.loan_id IN (
+                        SELECT DISTINCT
+                            l.loan_id
+                        FROM
+                            ms_loans l,
+                            ms_incomings i
+                        WHERE
+                            l.loan_id = i.loan_id
+                            AND i.incoming_category = 'Installment'
+                            AND i.loan_status != 'Paid'
+                            AND l.is_active = 1
+                            AND i.is_active = 1
+                    )
+            ")[0]->countLoan;
+
+            DB::statement("
+                update customers
+                set
+                    customer_active_loan = '$checkCustomerActiveLoan'
+                    , updated_at = NOW()
+                where
+                    customer_id = '$id'
+                    AND is_active = 1
+            ");
+
             // update customer collect
             if ($checkCollectCustomer > 0 && $checkCollectCustomer < 5)
             {
@@ -193,7 +235,8 @@ class LoanController extends Controller
             return view('loan/loan', [
                 'customer' => $customer,
                 'loanList' => $loanList,
-                'incomings' => $incoming
+                'incomings' => $incoming,
+                'collateralList' => $collateralList
             ]);
         }
         else{
@@ -201,7 +244,8 @@ class LoanController extends Controller
             return view('loan/loan', [
                 'customer' => $customer,
                 'loanList' => $loanList,
-                'incomings' => $incoming
+                'incomings' => $incoming,
+                'collateralList' => $collateralList
             ]);
         }
     }
@@ -323,7 +367,7 @@ class LoanController extends Controller
 
                 if (sizeof($cashAccount) > 0)
                 {
-                    $total = $cashAccount[0]->cash_account - $request->amount;
+                    $total = $cashAccount[0]->cash_account - $request->loanAmount;
                     $bank_account = $cashAccount[0]->bank_account;
                 }
                 else
@@ -441,21 +485,22 @@ class LoanController extends Controller
 
     function payLoan(Request $request)
     {
-        $row = json_decode($request->input('data'));
-        $outstanding = 0;
+        $rules = [
+            'payAmount'         => 'required',
+            'loanId'            => 'required',
+            'customerId'        => 'required'
+        ];
 
-        for ($i = 0; $i < sizeof($row); $i++)
+        if ($this->validate($request, $rules))
         {
-            $payData = json_decode($row[$i]);
-            // dd($payData);
-
             $installmentAmount = DB::select("
                 SELECT
                     l.installment_amount,
                     CASE
                         WHEN i.incoming_amount > 0 THEN (l.installment_amount - i.incoming_amount)
                         ELSE l.installment_amount
-                    END as outstanding
+                    END as outstanding,
+                    i.incoming_id
                 FROM
                     ms_loans l,
                     ms_incomings i
@@ -464,24 +509,27 @@ class LoanController extends Controller
                     AND l.customer_id = '$request->customerId'
                     AND l.is_active = 1
                     AND i.loan_id = l.loan_id
-                    AND i.incoming_id = '$payData->incomingId'
                     AND i.is_active = 1
                     AND i.loan_status NOT IN ('Paid')
+                ORDER BY i.incoming_id
             ");
 
-            $outstanding = $payData->amount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
+            $installment = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
+            $outstanding = $request->payAmount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
+            $incomingId = $installmentAmount[0]->incoming_id;
+
             if($outstanding < 0)
             {
-                // partial pay
+                // Not Fully Paid
                 DB::statement("
                     update ms_incomings
                     set
-                        incoming_amount = incoming_amount + '$payData->amount'
+                        incoming_amount = incoming_amount + '$request->payAmount'
                         , incoming_date = NOW()
                         , update_at = NOW()
-                        , loan_status = 'Partial Pay'
+                        , loan_status = 'Not Fully Paid'
                     where
-                        incoming_id = '$payData->incomingId'
+                        incoming_id = '$incomingId'
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
@@ -492,12 +540,12 @@ class LoanController extends Controller
                 DB::statement("
                     update ms_incomings
                     set
-                        incoming_amount = incoming_amount + '$payData->amount'
+                        incoming_amount = incoming_amount + '$request->payAmount'
                         , incoming_date = NOW()
                         , update_at = NOW()
                         , loan_status = 'Paid'
                     where
-                        incoming_id = '$payData->incomingId'
+                        incoming_id = '$incomingId'
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
@@ -507,12 +555,12 @@ class LoanController extends Controller
                 DB::statement("
                     update ms_incomings
                     set
-                        incoming_amount = incoming_amount + '" . $installmentAmount[0]->outstanding . "'
+                        incoming_amount = incoming_amount + '" . $installment . "'
                         , incoming_date = NOW()
                         , update_at = NOW()
                         , loan_status = 'Paid'
                     where
-                        incoming_id = '$payData->incomingId'
+                        incoming_id = '$incomingId'
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
@@ -527,7 +575,7 @@ class LoanController extends Controller
                     WHERE
                         loan_status NOT IN ('Paid')
                         AND loan_id = '$request->loanId'
-                        AND incoming_id NOT IN ('$payData->incomingId')
+                        AND incoming_id NOT IN ('$incomingId')
                         AND is_active = 1
                     ORDER BY
                         loan_due_date ASC
@@ -539,14 +587,14 @@ class LoanController extends Controller
                 {
                     $status = '';
                     $pay = 0;
-                    $incomingId = '';
+                    $incomingIds = '';
                     // dd($outstanding);
                     
                     if ($outstanding < 0)
                     {
                         break;
                     }
-                    else if ($outstanding - $installmentAmount[0]->installment_amount > 0)
+                    else if ($outstanding - $installment > 0)
                     {
                         if ($j == ($countIncoming-1))
                         {  
@@ -554,20 +602,20 @@ class LoanController extends Controller
                             $status = 'Paid';
                         }
                         else{
-                            $pay = $installmentAmount[0]->installment_amount;
+                            $pay = $installment;
                             $status = 'Paid';
                         }
                     }
-                    else if ($outstanding == $installmentAmount[0]->installment_amount)
+                    else if ($outstanding == $installment)
                     {
                         $status = 'Paid';
                         $pay = $outstanding;
                     }
-                    else if ($outstanding < $installmentAmount[0]->installment_amount)
+                    else if ($outstanding < $installment)
                     {
                         if ($incoming[$j]->loan_status == 'Haven\'t due yet' || $incoming[$j]->loan_status == 'Due')
                         {
-                            $status = 'Partial Pay';
+                            $status = 'Not Fully Paid';
                             $pay = $outstanding;
                         }
                         else if ($incoming[$j]->loan_status == 'Overdue')
@@ -577,11 +625,11 @@ class LoanController extends Controller
                         }
                     }
 
-                    $outstanding = $outstanding - $installmentAmount[0]->installment_amount;
+                    $outstanding = $outstanding - $installment;
 
                     if ($status != '' && $pay != 0)
                     {
-                        $incomingId = $incoming[$j]->incoming_id;
+                        $incomingIds = $incoming[$j]->incoming_id;
                         
                         DB::statement("
                             update ms_incomings
@@ -591,10 +639,48 @@ class LoanController extends Controller
                                 , update_at = NOW()
                                 , loan_status = '$status'
                             where
-                                incoming_id = '$incomingId'
+                                incoming_id = '$incomingIds'
                                 AND loan_id = '$request->loanId'
                                 AND is_active = 1
                         ");
+
+                        $cashAccount = DB::select("
+                            SELECT 
+                                cash_account,
+                                bank_account                     
+                            FROM 
+                                trx_account_mgmt 
+                            WHERE 
+                                id = (SELECT max(id) from trx_account_mgmt where is_active=1)
+                                and is_active=1    
+                        ");
+
+                        $incomingStatus = DB::select("
+                            SELECT
+                                loan_status,
+                                incoming_amount
+                            FROM
+                                ms_incomings
+                            WHERE
+                                incoming_id = '$incomingIds'
+                                AND loan_id = '$request->loanId'
+                                AND is_active = 1
+                        ");
+
+                        $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
+                        
+                        $transaction = DB::table('trx_account_mgmt')->insert([
+                            'trx_category'      => 'Incoming',
+                            'trx_amount'        => $incomingStatus[0]->incoming_amount,
+                            'incoming_id'       => $incomingIds,
+                            'cash_account'      => $total,
+                            'bank_account'      => $cashAccount[0]->bank_account,
+                            'is_active'         => 1,
+                            'create_by'         => 3,
+                            'create_at'        => date('Y-m-d H:i:s'),
+                            'update_by'        => 3,
+                            'update_at'        => date('Y-m-d H:i:s')
+                        ]);
                     }
                 }
             }
@@ -617,29 +703,25 @@ class LoanController extends Controller
                 FROM
                     ms_incomings
                 WHERE
-                    incoming_id = '$payData->incomingId'
+                    incoming_id = '$incomingId'
                     AND loan_id = '$request->loanId'
                     AND is_active = 1
             ");
 
-            if ($incomingStatus[0]->loan_status == 'Paid')
-            {
-                $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
-                
-                $transaction = DB::table('trx_account_mgmt')->insert([
-                    'trx_category'      => 'Incoming',
-                    'trx_amount'        => $incomingStatus[0]->incoming_amount,
-                    'incoming_id'       => $payData->incomingId,
-                    'cash_account'      => $total,
-                    'bank_account'      => $cashAccount[0]->bank_account,
-                    'is_active'         => 1,
-                    'create_by'         => 3,
-                    'create_at'        => date('Y-m-d H:i:s'),
-                    'update_by'        => 3,
-                    'update_at'        => date('Y-m-d H:i:s')
-                ]);
-            }
-
+            $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
+            
+            $transaction = DB::table('trx_account_mgmt')->insert([
+                'trx_category'      => 'Incoming',
+                'trx_amount'        => $incomingStatus[0]->incoming_amount,
+                'incoming_id'       => $incomingId,
+                'cash_account'      => $total,
+                'bank_account'      => $cashAccount[0]->bank_account,
+                'is_active'         => 1,
+                'create_by'         => 3,
+                'create_at'        => date('Y-m-d H:i:s'),
+                'update_by'        => 3,
+                'update_at'        => date('Y-m-d H:i:s')
+            ]);
         }
 
         DB::commit();

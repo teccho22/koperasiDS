@@ -15,7 +15,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Customer</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Loan</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
@@ -32,7 +32,7 @@
                             </div>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
-                                    <span for="" class="control-label">Interst Rate</span>
+                                    <span for="" class="control-label">Interest Rate</span>
                                 </div>
                                 <div class="col-sm-8 required">
                                     <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)"/> 
@@ -77,7 +77,9 @@
                                 <div class="col-sm-8">
                                     <input type="text" name="collateralCategory" class="form-control" placeholder="Collateral Category" list="collateralList"/>
                                     <datalist id="collateralList">
-                                        
+                                        @foreach ($collateralList as $collateral)
+                                        <option>{{ $collateral->collateral_category }}</option>
+                                        @endforeach
                                     </datalist>
                                 </div>
                             </div>
@@ -85,7 +87,7 @@
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
-                                <div class="col-sm-8">
+                                <div class="col-sm-8 upload-file">
                                     <i class="fa fa-camera file"></i><span class="name">No file selected</span>
                                     <input type="file" name="collateralFiles" id="collateralFile" class="form-control"/>
                                 </div>
@@ -105,7 +107,7 @@
                     <button type="button" class="btn btn-primary" onclick="validate(this)">
                         <i class="fa fa-share"></i> Submit
                     </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
+                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalLoan')">
                         <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
@@ -141,7 +143,7 @@
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
-                                <div class="col-sm-8">
+                                <div class="col-sm-8 upload-file">
                                     <i class="fa fa-camera file"></i><span class="name">No file selected</span>
                                     <input type="file" name="editCollateralFiles" id="editCollateralFiles" class="form-control"/>
                                 </div>
@@ -161,7 +163,7 @@
                     <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                         <i class="fa fa-share"></i> Submit
                     </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
+                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditLoan')">
                         <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
@@ -182,14 +184,11 @@
                         <input type="hidden" name="loanId" id="payLoanId" class="form-control" value="" hidden/>
                         <div class="form-horizontal loan-modal">
                             <div class="form-group row payData">
-                                <div class="col-sm-5">
-                                    <select class="form-control selectpicker installmentId" id="pay0" data-size="5" data-live-search="true"></select>
-                                </div>
                                 <div class="col-sm-4">
-                                    <input type="text" class="form-control amount-to-pay" id="payAmount0" placeholder="amount" onkeypress="return decimalWithMinusKeypress(event)">
+                                    <span for="" class="control-label" style="font-size: 18px">Pay Amount</span>
                                 </div>
-                                <div class="col-sm-3">
-                                    <button type="button" class="btn btn-primary addPay" onclick=""> + </button>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control amount-to-pay" id="payAmount" placeholder="amount" onkeypress="return decimalWithMinusKeypress(event)">
                                 </div>
                             </div>
                         </div>
@@ -199,7 +198,7 @@
                     <button type="button" class="btn btn-primary" onclick="validatePay(this)">
                         <i class="fa fa-share"></i> Submit
                     </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
+                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalPayLoan')">
                         <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
@@ -260,7 +259,7 @@
     </div>
     <div class="container">
         <table class="table table-responsive" style="border-radius: 11px;">
-            <thead style="background-color: #0877DE !important; color:#FFFFFF !important;">
+            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th></th>
                     <th>Loan Number</th>
@@ -299,7 +298,7 @@
                     <td colspan=8>
                         <p style="color:#0877DE">Payment Schedule</p>
                         <table class="table table-responsive" style="border-radius: 11px; width: 80%; margin-left:15px;">
-                            <thead style="background-color: #0877DE !important; color:#FFFFFF !important;">
+                            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                                 <tr>
                                     <th>Installment No</th>
                                     <th>Installment Date</th>
@@ -310,15 +309,21 @@
                             </thead>
                             <tbody>
                                 @if ($incomings != null)
+                                    @php
+                                        $count = 1;
+                                    @endphp
                                     @foreach ($incomings as $installment)
                                         @if ($installment->loan_id == $data->loan_id)
                                             <tr>
-                                                <td>{{ $data->loan_number}}-{{ $loop->index +1 }}</td>
+                                                <td>{{ $data->loan_number}}-{{ $count }}</td>
                                                 <td>{{ date("d/m/Y", strtotime($installment->loan_due_date))}}</td>
                                                 <td>{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
                                                 <td>{{ number_format(($installment->incoming_amount - $data->installment_amount) * -1, 2, ',', '.')}}</td>
                                                 <td>{{ $installment->loan_status}}</td>
                                             </tr>
+                                            @php
+                                                $count++;
+                                            @endphp
                                         @endif
                                     @endforeach
                                 @endif
@@ -362,6 +367,10 @@
             }
         });
 
+        $("i.upload-file").click(function () {
+            $("input[type='file']").trigger('click');
+        });
+
         $('input[type="file"]').on('change', function() {
             var val = $(this).val();
             $(this).siblings('span').text(val);
@@ -376,7 +385,7 @@
         {
             // assign value
             var loan = $.grep(loanList, function(v) {
-                return v.loan_id === id;
+                return v.loan_id == id;
             });
             console.log(loan);
 
@@ -393,47 +402,25 @@
             $('#payLoanId').val(id);
 
             var incoming = $.grep(incomingList, function(v) {
-                return v.loan_id == id;
+                return v.loan_id == id  && v.loan_status != 'Paid';
                 // && v.loan_status != 'Haven\'t due yet' && v.loan_status != 'Paid'
             });
 
             var loan = $.grep(loanList, function(v) {
                 return v.loan_id == id;
             });
-
-            $('#pay0').html('');
-            $('#pay0').selectpicker('destroy');
             
-            if (incoming.length == 0)
-            {
-                $('#pay0').prop('disabled', true);
-                $('#pay0').prop('title', 'No available incoming exists');
-            }
-            else
-            {
-                for (var i = 0; i < incoming.length; i++)
-                {
-                    $('#pay0').append('<option value="' + incoming[i]['incoming_id'] + '">' + loan[0]['loan_number'] + '-' + (i+1) + ' (' + incoming[i]['loan_status'] + ')' + '</option>');
-                }
-                $('#pay0').selectpicker();
-                $('#pay0').selectpicker('val', '');
-            }
+            var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount']
 
-            $('.addPay').on('click', function() {
-                generatePay(id);
-                addLoanPayment(id);
-            });
+            $('#payAmount').val(outstanding.toFixed(2));
 
             $('#modalPayLoan').modal('show');
         }
 
-        $("i").click(function () {
-            $("input[type='file']").trigger('click');
-        });
-
         function calculateLoan(event)
         {
             var loan = 0;
+            var tenor = 0;
             if (event.key != 'Backspace')
             {
                 loan = parseInt($('#loanAmount').val() + event.key);
@@ -465,11 +452,12 @@
             }
 
             // interest default 2,5%
-            var interest = $('#interestRate').val();
+            var interestRate = $('#interestRate').val();
             var installmentAmount = 0;
             if ($('#tenor').val() != '')
             {
-                installmentAmount = loan + (((interest * loan)/100)/parseInt($('#tenor').val()));
+                tenor = parseInt($('#tenor').val());
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
                 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -478,21 +466,22 @@
 
         function calculateInterest(event)
         {
-            var interest = 0;
+            var interestRate = 0;
             if (event.key != 'Backspace')
             {
-                interest = parseInt($('#interestRate').val() + event.key);
+                interestRate = parseInt($('#interestRate').val() + event.key);
             }
             else
             {
-                interest = parseInt($('#interestRate').val().substring(0, $('#interestRate').val().length - 1));
+                interestRate = parseInt($('#interestRate').val().substring(0, $('#interestRate').val().length - 1));
             }
 
             var installmentAmount = 0;
             var loan = parseInt($('#loanAmount').val());
             if ($('#tenor').val() != '' && $('#loanAmount').val() != '')
             {
-                installmentAmount = loan + (((interest * loan)/100)/parseInt($('#tenor').val()));
+                tenor = $('#tenor').val();
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -510,12 +499,12 @@
                 tenor = parseInt($('#tenor').val().substring(0, $('#tenor').val().length - 1));
             }
 
-            var interest = $('#interestRate').val();
+            var interestRate = parseInt($('#interestRate').val());
             var loan = parseInt($('#loanAmount').val());
             var installmentAmount = 0;
-            if ($('#loanAmount').val() != '')
+            if ($('#tenor').val() != '' && $('#loanAmount').val() != '')
             {
-                installmentAmount = (loan + ((interest * loan)/100))/tenor;
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -677,13 +666,12 @@
                                 type: 'POST',
                                 url: "{{ url('/payLoan') }}",
                                 data: {
-                                    data : JSON.stringify(data),
+                                    payAmount : $('#payAmount').val(),
                                     loanId : $('#payLoanId').val(),
                                     customerId : $('#payCustomerId').val()
                                 },
                                 success : function(result)
                                 {
-                                    var url = '/' + result.redirect + '/' + result.custId;
                                     location.reload();
                                 }
                             });
@@ -815,6 +803,26 @@
                     },
                     cancel: function(){
                         // return false;
+                    }
+                }
+            });
+        }
+
+        function confirmCancel(modalId)
+        {
+            // $('#addCustomerForm')[0].reset();
+
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to leave and discard changes?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
                     }
                 }
             });

@@ -82,7 +82,7 @@
                                     <span for="" class="control-label">Customer Phone Number</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" name="customerPhone" class="form-control" placeholder="Name" onkeypress="numericKeypress(event)"/>
+                                    <input type="text" name="customerPhone" class="form-control" placeholder="0856xxxxxx" onkeypress="numericKeypress(event)"/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -110,7 +110,7 @@
                                 </div>
                                 <div class="form-group row required">
                                     <div class="col-sm-4">
-                                        <span for="" class="control-label">Interst Rate</span>
+                                        <span for="" class="control-label">Interest Rate</span>
                                     </div>
                                     <div class="col-sm-8 required">
                                         <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)"/> 
@@ -155,7 +155,9 @@
                                     <div class="col-sm-8">
                                         <input type="text" name="collateralCategory" class="form-control" placeholder="Collateral Category" list="collateralList"/>
                                         <datalist id="collateralList">
-                                            
+                                            @foreach ($collateralList as $collateral)
+                                            <option>{{ $collateral->collateral_category }}</option>
+                                            @endforeach
                                         </datalist>
                                     </div>
                                 </div>
@@ -163,9 +165,9 @@
                                     <div class="col-sm-4">
                                         <span for="" class="control-label">Collateral File</span>
                                     </div>
-                                    <div class="col-sm-8">
-                                        <i class="fa fa-camera file"></i><span class="name">No file selected</span>
-                                        <input type="file" name="collateralFiles" id="collateralFile" class="form-control"/>
+                                    <div class="col-sm-8 upload-file">
+                                        <i class="fa fa-camera file upload-file"></i><span class="name">No file selected</span>
+                                        <input type="file" name="collateralFiles" id="collateralFile" class="form-control upload-file"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -183,7 +185,7 @@
                         <button type="button" class="btn btn-primary" onclick="validate(this)">
                             <i class="fa fa-share"></i> Submit
                         </button>
-                        <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
+                        <button type="reset" class="btn btn-danger">
                             <i class="fa fa-close"></i> Cancel
                         </button>
                     </div>
@@ -276,7 +278,7 @@
                         <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                             <i class="fa fa-share"></i> Submit
                         </button>
-                        <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
+                        <button type="reset" class="btn btn-danger">
                             <i class="fa fa-close"></i> Cancel
                         </button>
                     </div>
@@ -299,7 +301,7 @@
             </form>
         </div>
         <table class="table table-responsive" style="border-radius: 11px">
-            <thead style="background-color: #0877DE !important; color:#FFFFFF !important">
+            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
                     <th>Customer Id</th>
@@ -342,7 +344,7 @@
 @section('javascript')
     <script type="text/javascript">
 
-        $("i").click(function () {
+        $("i.upload-file").click(function () {
             $("input[type='file']").trigger('click');
         });
 
@@ -416,6 +418,7 @@
         function calculateLoan(event)
         {
             var loan = 0;
+            var tenor = 0;
             if (event.key != 'Backspace')
             {
                 loan = parseInt($('#loanAmount').val() + event.key);
@@ -447,11 +450,13 @@
             }
 
             // interest default 2,5%
-            var interest = $('#interestRate').val();
+            var interestRate = $('#interestRate').val();
             var installmentAmount = 0;
             if ($('#tenor').val() != '')
             {
-                installmentAmount = loan + (((interest * loan)/100)/parseInt($('#tenor').val()));
+                tenor = $('#tenor').val();
+
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
                 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -460,21 +465,23 @@
 
         function calculateInterest(event)
         {
-            var interest = 0;
+            var interestRate = 0;
             if (event.key != 'Backspace')
             {
-                interest = parseInt($('#interestRate').val() + event.key);
+                interestRate = parseInt($('#interestRate').val() + event.key);
             }
             else
             {
-                interest = parseInt($('#interestRate').val().substring(0, $('#interestRate').val().length - 1));
+                interestRate = parseInt($('#interestRate').val().substring(0, $('#interestRate').val().length - 1));
             }
 
             var installmentAmount = 0;
             var loan = parseInt($('#loanAmount').val());
             if ($('#tenor').val() != '' && $('#loanAmount').val() != '')
             {
-                installmentAmount = loan + (((interest * loan)/100)/parseInt($('#tenor').val()));
+                tenor = $('#tenor').val();
+
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -492,12 +499,12 @@
                 tenor = parseInt($('#tenor').val().substring(0, $('#tenor').val().length - 1));
             }
 
-            var interest = $('#interestRate').val();
+            var interestRate = $('#interestRate').val();
             var loan = parseInt($('#loanAmount').val());
             var installmentAmount = 0;
             if ($('#loanAmount').val() != '')
             {
-                installmentAmount = (loan + ((interest * loan)/100))/tenor;
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }

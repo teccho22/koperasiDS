@@ -165,7 +165,7 @@
             </form>
         </div>
         <table class="table table-responsive">
-            <thead style="background-color: #0877DE !important; color:#FFFFFF !important">
+            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
                     <th>Id</th>
@@ -246,6 +246,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
+                allowEnterKey: true,
                 buttons: {   
                     ok: {
                         btnClass: 'btn-primary',
@@ -266,6 +267,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
+                allowEnterKey: true,
                 buttons: {   
                     ok: {
                         btnClass: 'btn-primary',
@@ -286,6 +288,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to delete this data?',
+                allowEnterKey: true,
                 buttons: {   
                     ok: {
                         btnClass: 'btn-primary',
@@ -306,6 +309,7 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Delete outgoing success',
+                                            allowEnterKey: true,
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',
@@ -321,6 +325,7 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Delete outgoing Failed',
+                                            allowEnterKey: true,
                                             buttons: { 
                                                 ok: {
                                                     btnClass: 'btn-primary',

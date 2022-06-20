@@ -161,7 +161,7 @@
             </form>
         </div>
         <table class="table table-responsive">
-            <thead style="background-color: #0877DE !important; color:#FFFFFF !important">
+            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
                     <th>Id</th>

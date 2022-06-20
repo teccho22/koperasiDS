@@ -28,11 +28,18 @@ class CustomerController extends Controller
                         ->distinct()
                         ->where('is_active', 1)
                         ->get(['customer_proffesion']);
+        
+        $collateralList = DB::table('ms_loans')
+                        ->select('collateral_category')
+                        ->distinct()
+                        ->where('is_active', 1)
+                        ->get(['collateral_category']);
 
         return view('customer/customer', [
             'customer' => $customer,
             'agentList' => $agentList,
-            'jobList' => $jobList
+            'jobList' => $jobList,
+            'collateralList' => $collateralList
         ]);
     }
 
@@ -188,9 +195,34 @@ class CustomerController extends Controller
                         'update_by' => 3
                     ]);
 
+                    $cashAccount = DB::select("
+                        SELECT 
+                            cash_account,
+                            bank_account                     
+                        FROM 
+                            trx_account_mgmt 
+                        WHERE 
+                            id = (SELECT max(id) from trx_account_mgmt where is_active=1)
+                            and is_active=1    
+                    ");
+
+                    if (sizeof($cashAccount) > 0)
+                    {
+                        $total = $cashAccount[0]->cash_account - $request->loanAmount;
+                        $bank_account = $cashAccount[0]->bank_account;
+                    }
+                    else
+                    {
+                        $total=0;
+                        $bank_account = 0;
+                    }
+
                     $transaction = DB::table('trx_account_mgmt')->insertGetId([
                         'outgoing_id'       => $outgoing,
                         'trx_category'      => 'Outgoing',
+                        'trx_amount'        => $request->loanAmount,
+                        'cash_account'      => $total,
+                        'bank_account'      => $bank_account,
                         'update_at'         => date('Y-m-d H:i:s'),
                         'create_at'         => date('Y-m-d H:i:s'),
                         'is_active'         => 1,
@@ -219,16 +251,6 @@ class CustomerController extends Controller
                                 'update_by' => 3
                             ]
                         );
-
-                        $transaction = DB::table('trx_account_mgmt')->insertGetId([
-                            'incoming_id'       => $incoming,
-                            'trx_category'      => 'Incoming',
-                            'update_at'         => date('Y-m-d H:i:s'),
-                            'create_at'         => date('Y-m-d H:i:s'),
-                            'is_active'         => 1,
-                            'create_by'         => 3,
-                            'update_by'         => 3
-                        ]);
 
                         if (!$incoming)
                         {

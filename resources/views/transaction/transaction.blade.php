@@ -60,12 +60,13 @@
                                     <span for="" class="control-label">Category</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <select class="form-control selectpicker" id="category" name="category" data-size="5" data-live-search="true">
+                                    <select class="form-control selectpicker" id="category" name="category" data-live-search="true">
                                         <option value="Cash2Bank">Cash to Bank</option>
                                         <option value="Bank2Cash">Bank to Cash</option>
                                         <option value="BankInterest">Bank Interest</option>
                                         <option value="BankTax">Bank Tax</option>
                                         <option value="BankTrf">Bank Transfer</option>
+                                        <option value="Cash">Add Cash</option>
                                     </select>
                                 </div>
                             </div>
@@ -162,7 +163,7 @@
             </form>
         </div>
         <table class="table table-responsive">
-            <thead style="background-color: #0877DE !important; color:#FFFFFF !important">
+            <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
                     <th>Id</th>

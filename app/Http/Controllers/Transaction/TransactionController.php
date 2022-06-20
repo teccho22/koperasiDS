@@ -91,6 +91,12 @@ class TransactionController extends Controller
                     return redirect()->back()->with('message', 'Amount cannot be greater than bank account');
                 }
             }
+            else if ($request->category == 'Cash')
+            {
+                // cash acc + amount
+                $cashAccount = $balance[0]->cash_account + $request->amount;
+                $bankAccount = $balance[0]->bank_account;
+            }
 
             $transaction = DB::table('trx_account_mgmt')->insert([
                 'trx_category'      => $request->category,
