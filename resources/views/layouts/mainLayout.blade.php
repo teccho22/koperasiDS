@@ -12,9 +12,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/5.0.7/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
-    {{-- <script type="text/javascript" src="{{ URL::asset('js/moment.min.js') }}"></script> --}}
-    {{-- <link href="{{ URL::asset('css/jquery.datetimepicker.css') }}" rel="stylesheet">
-    <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>   --}}
+    <script type="text/javascript" src="{{ URL::asset('js/moment.min.js') }}"></script>
+    <link href="{{ URL::asset('css/jquery.datetimepicker.css') }}" rel="stylesheet">
+    <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>  
+    <script type="text/javascript" charset="utf-8" src="https://www.zoonman.com/projects/combobox/combobox.js"></script>
     {{-- <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script> --}}
     <head>
         <title>@yield('title')</title>
@@ -36,14 +37,14 @@
                 <div class="subnav">
                     <button class="subnavbtn">Report <i class="fa fa-caret-down"></i></button>
                     <div class="subnav-content">
-                        <a href="#disbursement">Disbursement</a>
-                        <a href="#NPL">NPL</a>
+                        <a href="{{ route('disbursement') }}">Disbursement</a>
+                        <a href="{{ route('npl') }}">NPL</a>
                         <a href="#business">Business Growth</a>
                     </div>
                 </div>
             </div>
             <span class="hamburger" onclick="openNav()">&#9776;</span>
-            <h3 align="left" style="color: #0877DE;"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo"> Koperasi Damai Sejahtera</h3><br />
+            <h3 align="left" style="color: #0877DE;"><a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo"> Koperasi Damai Sejahtera</a></h3><br />
         </div>
 
         <div class="content">

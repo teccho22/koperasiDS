@@ -208,6 +208,9 @@
 
     {{-- customer detail --}}
     <div id="custDetail" class="container custDetail">
+        <div class="row breadcrumbs">
+            <a href="{{ route('customer') }}"><i class="fa fa-arrow-left"></i> Customer/Loan</a>
+        </div>
         <div class="row">
             <div class="col-sm-6">
                 <div class="row">
@@ -253,7 +256,7 @@
                 </form>
             </div>
             <div class="col-sm-6">
-                <button id="addLoan" type="button" class="btn btn-primary mr-2" title="Add" style="float: right;" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button>
+                <button id="addLoan" type="button" class="btn btn-primary mr-2" title="Add" style="float: right;" onclick="showAddLoanModal();"><i class="fa fa-plus"></i> Add Loan</button>
             </div>
         </div>
     </div>
@@ -452,7 +455,7 @@
             }
 
             // interest default 2,5%
-            var interestRate = $('#interestRate').val();
+            var interestRate = parseFloat($('#interestRate').val());
             var installmentAmount = 0;
             if ($('#tenor').val() != '')
             {
@@ -498,13 +501,13 @@
             {
                 tenor = parseInt($('#tenor').val().substring(0, $('#tenor').val().length - 1));
             }
-
-            var interestRate = parseInt($('#interestRate').val());
+            
+            var interestRate = parseFloat($('#interestRate').val());
             var loan = parseInt($('#loanAmount').val());
             var installmentAmount = 0;
-            if ($('#tenor').val() != '' && $('#loanAmount').val() != '')
+            if (tenor != 0 && $('#loanAmount').val() != '')
             {
-                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
+                installmentAmount = loan * (1 + (((interestRate/100) * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
             }
@@ -856,5 +859,12 @@
     }
     .file:hover {
         opacity: 0.6;
+    }
+    .breadcrumbs {
+        margin-top: -25px;
+        margin-bottom: 25px;
+        cursor: pointer;
+        font-size: 30px;
+        color: #337ab7;
     }
 </style>

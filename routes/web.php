@@ -49,3 +49,10 @@ Route::get('/transaction', '\App\Http\Controllers\Transaction\TransactionControl
 Route::post('/addTransaction', '\App\Http\Controllers\Transaction\TransactionController@addTransaction');
 Route::post('/editTransaction', '\App\Http\Controllers\Transaction\TransactionController@editTransaction');
 Route::post('/deleteTransaction', '\App\Http\Controllers\Transaction\TransactionController@deleteTransaction');
+
+Route::get('/disbursement', '\App\Http\Controllers\Report\DisbursementController@index')->name('disbursement');
+Route::get('/searchDisbursement', '\App\Http\Controllers\Report\DisbursementController@searchDisbursement')->name('searchDisbursement');
+
+Route::get('/npl', '\App\Http\Controllers\Report\NplController@index')->name('npl');
+Route::get('/searchNpl', '\App\Http\Controllers\Report\NplController@searchNpl')->name('searchNpl');
+

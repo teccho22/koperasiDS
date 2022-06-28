@@ -64,7 +64,7 @@
                                     <input type="text" name="customerJob" class="form-control" placeholder="Job" list="jobList"/>
                                     <datalist id="jobList">
                                         @foreach ($jobList as $job)
-                                        <option>{{ $job->customer_proffesion }}</option>
+                                        <option value="{{ $job->customer_proffesion }}">{{ $job->customer_proffesion }}</option>
                                         @endforeach
                                     </datalist>
                                 </div>
@@ -185,7 +185,7 @@
                         <button type="button" class="btn btn-primary" onclick="validate(this)">
                             <i class="fa fa-share"></i> Submit
                         </button>
-                        <button type="reset" class="btn btn-danger">
+                        <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalCustomer')">
                             <i class="fa fa-close"></i> Cancel
                         </button>
                     </div>
@@ -278,7 +278,7 @@
                         <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                             <i class="fa fa-share"></i> Submit
                         </button>
-                        <button type="reset" class="btn btn-danger">
+                        <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditCustomer')">
                             <i class="fa fa-close"></i> Cancel
                         </button>
                     </div>
@@ -450,7 +450,7 @@
             }
 
             // interest default 2,5%
-            var interestRate = $('#interestRate').val();
+            var interestRate = parseFloat($('#interestRate').val());
             var installmentAmount = 0;
             if ($('#tenor').val() != '')
             {
@@ -499,7 +499,7 @@
                 tenor = parseInt($('#tenor').val().substring(0, $('#tenor').val().length - 1));
             }
 
-            var interestRate = $('#interestRate').val();
+            var interestRate = parseFloat($('#interestRate').val());
             var loan = parseInt($('#loanAmount').val());
             var installmentAmount = 0;
             if ($('#loanAmount').val() != '')
@@ -554,6 +554,26 @@
                     },
                     cancel: function(){
                         // return false;
+                    }
+                }
+            });
+        }
+
+        function confirmCancel(modalId)
+        {
+            // $('#addCustomerForm')[0].reset();
+
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to leave and discard changes?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
                     }
                 }
             });
