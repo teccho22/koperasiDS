@@ -9,16 +9,23 @@ use DB;
 class IncomingController extends Controller
 {
     //
-    function index()
+    function index(Request $request)
     {
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+
         $incoming = DB::table('ms_incomings')
                     ->where('is_active', 1)
                     ->orderBy('loan_due_date', 'asc')
                     ->orderBy('incoming_date', 'asc')
-                    ->paginate(10);
+                    ->paginate($paginate);
 
         return view('transaction/incoming', [
-            'incoming' => $incoming
+            'incoming' => $incoming,
+            'paginate' => $paginate
         ]);
     }
 

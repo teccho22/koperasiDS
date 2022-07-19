@@ -1,6 +1,6 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Transaction/Transaction Management')
+@section('title', 'Transaction Management')
  
 @section('sidebar')
 @stop
@@ -41,11 +41,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Transaction</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Add Transaction</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/addTransaction') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addTransactionForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/addTransaction') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="addTransactionForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
@@ -82,11 +82,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalTransaction')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validate(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -98,11 +98,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Transaction</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Edit Transaction</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/editTransaction') }}" style="font-family: Roboto; color:black; font-size: 20px" id="modalEditTransaction" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/editTransaction') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="modalEditTransaction" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <input type="hidden" name="transactionId" id="editTransactionId" class="form-control" value="" hidden/>
                             <div class="form-group row required">
@@ -137,11 +137,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditTransaction')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -149,14 +149,25 @@
     </div>
 
     <div id="divTransaction">
-        <div class="toolbar">
-            <form method="post" action="{{ url('/searchTransaction') }}" style="font-family: Roboto; color:black" class="form-inline">
+        <div class="toolbar Row">
+            <form method="post" action="{{ url('/searchTransaction') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                 {{ csrf_field() }}
-                <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-search"></i> Search
-                </button>
-                <div style="float: right">
+                <div class="Column">
+                    <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="Column">
+                    <span for="" class="control-label" style="margin-right: 10px;">Show Result</span>
+                    <select class="form-control selectpicker" id="pagination" name="pagination" data-live-search="true" style="margin-right: auto;" onchange="showPagination()">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="Column">
                     <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddTransactionModal()"><i class="fa fa-plus"></i> Add Transaction</button>
                     {{-- <button id="addLoan" type="button" class="btn btn-primary" title="Add" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button> --}}
                 </div>
@@ -181,7 +192,7 @@
                     <td>{{ ($transaction->currentPage()-1) * $transaction->perPage() + $loop->index + 1}}</td>
                     <td>{{ str_pad($data->id, 4, '0', STR_PAD_LEFT)}}</td>
                     <td>
-                        {{ date("d-M-Y", strtotime($data->update_at))}}
+                        {{ date("d-M-Y", strtotime($data->transaction_date))}}
                     </td>
                     <td>
                         @if ($data->trx_category == 'Cash2Bank')
@@ -198,9 +209,9 @@
                             {{ $data->trx_category }}
                         @endif
                     </td>
-                    <td>{{ number_format($data->trx_amount, 2, ',', '.')}}</td>
-                    <td>{{ number_format($data->cash_account, 2, ',', '.')}}</td>
-                    <td>{{ number_format($data->bank_account, 2, ',', '.')}}</td>
+                    <td>Rp{{ number_format($data->trx_amount, 2, ',', '.')}}</td>
+                    <td>Rp{{ number_format($data->cash_account, 2, ',', '.')}}</td>
+                    <td>Rp{{ number_format($data->bank_account, 2, ',', '.')}}</td>
                     {{-- <td>
                         @if ($data->trx_category != 'New Loan')
                             <button type="button" class="btn btn-primary" title="Edit" onclick="showEditTransactionModal('{{ $data->id}}')"><i class="fa fa-pen"></i></button>
@@ -222,6 +233,12 @@
 @section('javascript')
     <script>
         var transaction = {!! json_encode($transaction->toArray()) !!}.data;
+        // console.log(transaction);
+        $('#pagination').val({!! json_encode($paginate) !!});
+        function showPagination()
+        {
+            window.location = "{{ url('/transaction') }}?paginate=" + $('#pagination').val();
+        }
 
         $(function()
         {
@@ -343,12 +360,33 @@
                 }
             });
         }
+
+        function confirmCancel(modalId)
+        {
+            // $('#addCustomerForm')[0].reset();
+
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to leave and discard changes?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            $('#' + modalId)[0].reset();
+                            $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
+                    }
+                }
+            });
+        }
     </script>
 @stop
 
 <style>
     #divTransaction {
-        font-family: Roboto;
+        font-family: 'Roboto', cursive;
         font-size: 18px;
     }
 </style>

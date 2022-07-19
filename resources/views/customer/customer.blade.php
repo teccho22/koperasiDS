@@ -1,6 +1,6 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Customer & Loan')
+@section('title', 'Customer')
  
 @section('sidebar')
 @stop
@@ -9,13 +9,26 @@
 <div class="container">
     @if (count($errors) > 0)
         <script>
-            swal({
-                title: "Alert",
-                text: 'Add Customer Failed. Please check your data!!',
-                icon: "error",
-                type: "error",
+            var text = "<ul>";
+            var errors = {!! json_encode($errors->toArray()) !!};
+                                    
+            $.each(errors, function(key, value){
+                for (var i=0; i<value.length; i++)
+                {
+                    text += "<li>" + value[i] + "</li>";
+                }
+            });
+            text += "</ul>";
+
+            $.confirm({
+                title: 'Add / Edit Customer Failed',
+                content: text,
+                type: 'red',
+                typeAnimated: true,
+                icon: 'fa fa-warning',
                 buttons: {
-                    confirm: true
+                    close: function () {
+                    }
                 }
             });
         </script>
@@ -25,21 +38,12 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Customer</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Add Customer</h4>
                </div>
-               <form method="post" action="{{ url('/customer/addCustomer') }}" style="font-family: Roboto; color:black" id="addCustomerForm" enctype="multipart/form-data">
+               <form method="post" action="{{ url('/customer/addCustomer') }}" style="font-family: 'Roboto', cursive; color:black" id="addCustomerForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="container-fluid">
                             {{ csrf_field() }}
-                            @if (count($errors) > 0)
-                                <div class="alert alert-danger">
-                                    <ul>
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                    </ul>
-                                </div>
-                            @endif
                             <div class="form-group row required">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Customer Name</span>
@@ -98,7 +102,7 @@
                                     </datalist>
                                 </div>
                             </div>
-                            <span for="" class="" style="font-size: 20px; color:#0877DE;">Disbursement</span>
+                            <span for="" class="" style="font-size: 20px; color:#0877DE;"><b>Disbursement</b></span>
                             <div class="divDisbursement">
                                 <div class="form-group row required">
                                     <div class="col-sm-4">
@@ -166,7 +170,7 @@
                                         <span for="" class="control-label">Collateral File</span>
                                     </div>
                                     <div class="col-sm-8 upload-file">
-                                        <i class="fa fa-camera file upload-file"></i><span class="name">No file selected</span>
+                                        <i class="fa fa-camera file upload-file" style="margin-left: 0px"></i><span class="name">No file selected</span>
                                         <input type="file" name="collateralFiles" id="collateralFile" class="form-control upload-file"/>
                                     </div>
                                 </div>
@@ -182,11 +186,11 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="validate(this)">
-                            <i class="fa fa-share"></i> Submit
-                        </button>
                         <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalCustomer')">
                             <i class="fa fa-close"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="validate(this)">
+                            <i class="fa fa-share"></i> Submit
                         </button>
                     </div>
                 </form>
@@ -200,19 +204,10 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
                     <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Customer</h4>
                </div>
-               <form method="post" action="{{ url('/customer/editCustomer') }}" style="font-family: Roboto; color:black" id="editCustomerForm" enctype="multipart/form-data">
+               <form method="post" action="{{ url('/customer/editCustomer') }}" style="font-family: 'Roboto', cursive; color:black" id="editCustomerForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="container-fluid">
                             {{ csrf_field() }}
-                            @if (count($errors) > 0)
-                                <div class="alert alert-danger">
-                                    <ul>
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                    </ul>
-                                </div>
-                            @endif
                             <input type="hidden" name="editCustomerId" id="editCustomerId" class="form-control" hidden/>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
@@ -275,11 +270,11 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
-                            <i class="fa fa-share"></i> Submit
-                        </button>
                         <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditCustomer')">
                             <i class="fa fa-close"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
+                            <i class="fa fa-share"></i> Submit
                         </button>
                     </div>
                 </form>
@@ -287,14 +282,25 @@
         </div>
     </div>
     <div id="divCustomer">
-        <div class="toolbar">
-            <form method="post" action="{{ url('/searchCustomer') }}" style="font-family: Roboto; color:black" class="form-inline">
+        <div class="toolbar Row">
+            <form method="post" action="{{ url('/searchCustomer') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                 {{ csrf_field() }}
-                <input type="text" name="search" class="form-control" placeholder="Name/KTP/Customer Id"/>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-search"></i> Search
-                </button>
-                <div style="float: right">
+                <div class="Column">
+                    <input type="text" name="search" class="form-control" placeholder="Name/KTP/Customer Id"/>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="Column">
+                    <span for="" class="control-label" style="margin-left: auto;">Show Result</span>
+                    <select class="form-control selectpicker" id="pagination" name="pagination" data-live-search="true" style="margin-right: auto;" onchange="showPagination()">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="Column">
                     <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddCustomerModal()"><i class="fa fa-plus"></i> Add Customer</button>
                     {{-- <button id="addLoan" type="button" class="btn btn-primary" title="Add" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button> --}}
                 </div>
@@ -343,6 +349,11 @@
 
 @section('javascript')
     <script type="text/javascript">
+        $('#pagination').val({!! json_encode($paginate) !!});
+        function showPagination()
+        {
+            window.location = "{{ url('/customer') }}?paginate=" + $('#pagination').val();
+        }
 
         $("i.upload-file").click(function () {
             $("input[type='file']").trigger('click');
@@ -583,7 +594,7 @@
 
 <style>
     #divCustomer {
-        font-family: Roboto;
+        font-family: 'Roboto', cursive;
         font-size: 18px;
     }
 
@@ -609,5 +620,16 @@
     }
     #collateralFile {
         display: none;
+    }
+    .Row {
+        display: table;
+        width: 100%; /*Optional*/
+        table-layout: fixed; /*Optional*/
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    .Column {
+        display: table-cell;
+        width: 46%;
     }
 </style>

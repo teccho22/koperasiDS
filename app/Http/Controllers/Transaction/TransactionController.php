@@ -10,8 +10,14 @@ use Response;
 class TransactionController extends Controller
 {
     //
-    function index()
+    function index(Request $request)
     {
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+
         // DB::connection()->enableQueryLog();
         $transaction = DB::table('trx_account_mgmt')
                     // ->leftJoin('ms_incomings', 'trx_account_mgmt.incoming_id', '=', 'ms_incomings.incoming_id')
@@ -20,14 +26,27 @@ class TransactionController extends Controller
                     })
                     ->leftJoin('ms_outgoings', 'trx_account_mgmt.outgoing_id', '=','ms_outgoings.outgoing_id')
                     ->where('trx_account_mgmt.is_active', 1)
+                    ->select(
+                        'trx_account_mgmt.id',
+                        DB::raw('(CASE 
+                            WHEN trx_account_mgmt.trx_category ="Outgoing" THEN ms_outgoings.outgoing_date
+                            WHEN trx_account_mgmt.trx_category ="Incoming" THEN ms_incomings.incoming_date
+                            ELSE trx_account_mgmt.update_at
+                            END) AS transaction_date'),
+                        'trx_account_mgmt.trx_category',
+                        'trx_account_mgmt.trx_amount',
+                        'trx_account_mgmt.cash_account',
+                        'trx_account_mgmt.bank_account'
+                    )
                     ->orderBy('trx_account_mgmt.id', 'desc')
-                    ->paginate(10);
+                    ->paginate($paginate);
         
         // $queries = DB::getQueryLog();
         // dd($queries);
 
         return view('transaction/transaction', [
-            'transaction' => $transaction
+            'transaction' => $transaction,
+            'paginate' => $paginate
         ]);
     }
 

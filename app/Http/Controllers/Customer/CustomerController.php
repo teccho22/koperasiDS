@@ -12,10 +12,15 @@ use Illuminate\Support\Str;
 class CustomerController extends Controller
 {
     //
-    function index()
+    function index(Request $request)
     {
-        $customer = DB::table('customers')->where('is_active', 1)->orderBy('customer_id', 'asc')->paginate(10);
-        // dd($customer);   
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+        $customer = DB::table('customers')->where('is_active', 1)->orderBy('customer_id', 'asc')->paginate($paginate);
+        // dd($customer);
         // print_r($customer);
         $agentList = DB::table('customers')
                         ->select('customer_agent')
@@ -39,7 +44,8 @@ class CustomerController extends Controller
             'customer' => $customer,
             'agentList' => $agentList,
             'jobList' => $jobList,
-            'collateralList' => $collateralList
+            'collateralList' => $collateralList,
+            'paginate' => $paginate
         ]);
     }
 
@@ -275,7 +281,6 @@ class CustomerController extends Controller
                 return redirect()->route('customer')->with(['errors' => 'Input Data Failed!!']);
             }
         }
-
     }
 
     function getEditData(Request $request)
@@ -338,9 +343,9 @@ class CustomerController extends Controller
 
     function searchCustomer(Request $request)
     {
-        $customer = DB::table('customers')->where('customer_id', $request->search)
-                                        ->orWhere('customer_name', $request->search)
-                                        ->orWhere('customer_id_number', $request->search)
+        $customer = DB::table('customers')->where('customer_id', 'LIKE', '%'.$request->search.'%')
+                                        ->orWhere('customer_name', 'LIKE', '%'.$request->search.'%')
+                                        ->orWhere('customer_id_number', 'LIKE', '%'.$request->search.'%')
                                         ->where('is_active', 1)
                                         ->paginate(10);
 
@@ -357,10 +362,17 @@ class CustomerController extends Controller
                         ->where('is_active', 1)
                         ->get(['customer_proffesion']);
 
+        $collateralList = DB::table('ms_loans')
+                        ->select('collateral_category')
+                        ->distinct()
+                        ->where('is_active', 1)
+                        ->get(['collateral_category']);
+
         return view('customer/customer', [
             'customer' => $customer,
             'agentList' => $agentList,
-            'jobList' => $jobList
+            'jobList' => $jobList,
+            'collateralList' => $collateralList
         ]);
     }
 }

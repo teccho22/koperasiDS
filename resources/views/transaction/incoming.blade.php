@@ -1,6 +1,6 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Transaction/incoming')
+@section('title', 'Incoming')
  
 @section('sidebar')
 @stop
@@ -26,11 +26,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Add Incoming</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/addIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/addIncoming') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="addIncomingForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
@@ -72,11 +72,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalIncoming')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validate(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -88,11 +88,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Incoming</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Edit Incoming</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/editIncoming') }}" style="font-family: Roboto; color:black; font-size: 20px" id="editIncomingForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/editIncoming') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="editIncomingForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <input type="hidden" name="incomingId" id="editIncomingId" class="form-control" value="" hidden/>
                             <div class="form-group row required">
@@ -135,11 +135,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditIncoming')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel()">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -147,14 +147,25 @@
     </div>
 
     <div id="divIncoming">
-        <div class="toolbar">
-            <form method="post" action="{{ url('/searchIncoming') }}" style="font-family: Roboto; color:black" class="form-inline">
+        <div class="toolbar Row">
+            <form method="post" action="{{ url('/searchIncoming') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                 {{ csrf_field() }}
-                <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-search"></i> Search
-                </button>
-                <div style="float: right">
+                <div class="Column">
+                    <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="Column">
+                    <span for="" class="control-label" style="margin-right: 10px;">Show Result</span>
+                    <select class="form-control selectpicker" id="pagination" name="pagination" data-live-search="true" style="margin-right: auto;" onchange="showPagination()">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="Column">
                     <button id="addCustomer" type="button" class="btn btn-primary mr-2" title="Add" onclick="showAddIncomingModal()"><i class="fa fa-plus"></i> Add Incoming</button>
                     {{-- <button id="addLoan" type="button" class="btn btn-primary" title="Add" onclick="showAddLoanModal()"><i class="fa fa-plus"></i> Add Loan</button> --}}
                 </div>
@@ -185,7 +196,7 @@
                         @endif
                     </td>
                     <td>{{ $data->incoming_category}}</td>
-                    <td>{{ number_format($data->incoming_amount, 2, ',', '.')}}</td>
+                    <td>Rp{{ number_format($data->incoming_amount, 2, ',', '.')}}</td>
                     <td style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
                         {{ $data->notes}}
                     </td>
@@ -210,6 +221,12 @@
 @section('javascript')
     <script>
         var incoming = {!! json_encode($incoming->toArray()) !!}.data;
+
+        $('#pagination').val({!! json_encode($paginate) !!});
+        function showPagination()
+        {
+            window.location = "{{ url('/incoming') }}?paginate=" + $('#pagination').val();
+        }
 
         $(function()
         {
@@ -341,12 +358,33 @@
                 }
             });
         }
+
+        function confirmCancel(modalId)
+        {
+            // $('#addCustomerForm')[0].reset();
+
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to leave and discard changes?',
+                buttons: {   
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            $('#' + modalId)[0].reset();
+                            $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
+                    }
+                }
+            });
+        }
     </script>
 @stop
 
 <style>
     #divIncoming {
-        font-family: Roboto;
+        font-family: 'Roboto', cursive;
         font-size: 18px;
     }
 </style>

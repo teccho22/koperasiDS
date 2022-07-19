@@ -10,16 +10,23 @@ use Session;
 class OutgoingController extends Controller
 {
     //
-    function index()
+    function index(Request $request)
     {
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+
         $outgoing = DB::table('ms_outgoings')
                     ->where('is_active', 1)
                     ->orderBy('outgoing_id', 'asc')
                     ->orderBy('outgoing_date', 'asc')
-                    ->paginate(10);
+                    ->paginate($paginate);
 
         return view('transaction/outgoing', [
-            'outgoing' => $outgoing
+            'outgoing' => $outgoing,
+            'paginate' => $paginate
         ]);
     }
 

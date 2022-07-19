@@ -1,13 +1,56 @@
 @extends('layouts.mainLayout')
  
-@section('title', 'Customer & Loan')
+@section('title', 'Loan')
  
 @section('sidebar')
 @stop
 
 @section('content')
     {{-- breadcrump --}}
+    @if (count($errors) > 0)
+        <script>
+            var text = "<ul>";
+            var errors = {!! json_encode($errors->toArray()) !!};
+            console.log(errors);
+                                    
+            $.each(errors, function(key, value){
+                for (var i=0; i<value.length; i++)
+                {
+                    text += "<li>" + value[i] + "</li>";
+                }
+            });
+            text += "</ul>";
 
+            $.confirm({
+                title: 'Add / Edit Loan Failed',
+                content: text,
+                type: 'red',
+                typeAnimated: true,
+                icon: 'fa fa-warning',
+                buttons: {
+                    close: function () {
+                    }
+                }
+            });
+        </script>
+    @endif
+
+    @if (!empty($success))
+        <script>
+
+            $.confirm({
+                title: 'Add / Edit Loan Failed',
+                content: 'Data Berhasil Disimpan!',
+                type: 'green',
+                typeAnimated: true,
+                icon: 'fa fa-success',
+                buttons: {
+                    close: function () {
+                    }
+                }
+            });
+        </script>
+    @endif
 
     {{-- modal --}}
     <div class="modal fade" id="modalLoan" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
@@ -15,13 +58,21 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Add Loan</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Add Loan</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/addLoan') }}" style="font-family: Roboto; color:black; font-size: 20px" id="addCustomerForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/addLoan') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="addCustomerForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <input type="hidden" name="custId" id="editCustomerId" class="form-control" value="{{ $customer->customer_id }}" hidden/>
+                            <div class="form-group row required">
+                                <div class="col-sm-4">
+                                    <span for="" class="control-label">Loan Date</span>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="date" class="form-control" id="inputLoanDate"  name="loanDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                </div>
+                            </div>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Loan Amount</span>
@@ -88,7 +139,7 @@
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
                                 <div class="col-sm-8 upload-file">
-                                    <i class="fa fa-camera file"></i><span class="name">No file selected</span>
+                                    <i class="fa fa-camera file" style="margin-left: 0px"></i><span class="name">No file selected</span>
                                     <input type="file" name="collateralFiles" id="collateralFile" class="form-control"/>
                                 </div>
                             </div>
@@ -104,11 +155,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalLoan')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validate(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalLoan')">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -120,14 +171,22 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Edit Loan</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Edit Loan</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
-                        <form method="post" action="{{ url('/editLoan') }}" style="font-family: Roboto; color:black; font-size: 20px" id="editLoanForm" enctype="multipart/form-data">
+                        <form method="post" action="{{ url('/editLoan') }}" style="font-family: 'Roboto', cursive; color:black; font-size: 20px" id="editLoanForm" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             <input type="hidden" name="custId" id="editCustomerId" class="form-control" value="{{ $customer->customer_id }}" hidden/>
                             <input type="hidden" name="loanId" id="editLoanId" class="form-control" value="" hidden/>
+                            <div class="form-group row required">
+                                <div class="col-sm-4">
+                                    <span for="" class="control-label">Loan Date</span>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="date" class="form-control" id="editLoanDate"  name="editLoanDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                </div>
+                            </div>
                             <div class="form-group row">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label">Collateral Category</span>
@@ -144,7 +203,7 @@
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
                                 <div class="col-sm-8 upload-file">
-                                    <i class="fa fa-camera file"></i><span class="name">No file selected</span>
+                                    <i class="fa fa-camera file" style="margin-left: 0px"></i><span class="name">No file selected</span>
                                     <input type="file" name="editCollateralFiles" id="editCollateralFiles" class="form-control"/>
                                 </div>
                             </div>
@@ -160,11 +219,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditLoan')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validateEdit(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalEditLoan')">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -176,13 +235,21 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times-circle"></i></button>
-                    <h4 class="modal-title bold-header" id="modalApproveTitle">Payment</h4>
+                    <h4 class="modal-title bold-header" id="modalApproveTitle" style="color: #0877DE !important;">Payment</h4>
                </div>
                <div class="modal-body">
                    <div class="container-fluid">
                         <input type="hidden" name="custId" id="payCustomerId" class="form-control" value="{{ $customer->customer_id }}" hidden/>
                         <input type="hidden" name="loanId" id="payLoanId" class="form-control" value="" hidden/>
-                        <div class="form-horizontal loan-modal">
+                        <div class="form-horizontal">
+                            <div class="form-group row required">
+                                <div class="col-sm-4">
+                                    <span for="" class="control-label" style="font-size: 18px">Payment Date</span>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="date" class="form-control" id="inputPaymentDate"  name="paymentDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                </div>
+                            </div>
                             <div class="form-group row payData">
                                 <div class="col-sm-4">
                                     <span for="" class="control-label" style="font-size: 18px">Pay Amount</span>
@@ -195,11 +262,11 @@
                    </div>
                </div>
                <div class="modal-footer">
+                   <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalPayLoan')">
+                       <i class="fa fa-close"></i> Cancel
+                   </button>
                     <button type="button" class="btn btn-primary" onclick="validatePay(this)">
                         <i class="fa fa-share"></i> Submit
-                    </button>
-                    <button type="reset" class="btn btn-danger" onclick="confirmCancel('modalPayLoan')">
-                        <i class="fa fa-close"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -209,7 +276,7 @@
     {{-- customer detail --}}
     <div id="custDetail" class="container custDetail">
         <div class="row breadcrumbs">
-            <a href="{{ route('customer') }}"><i class="fa fa-arrow-left"></i> Customer/Loan</a>
+            <a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/back.png') }}"> <b>Customer/ Loan</b></a>
         </div>
         <div class="row">
             <div class="col-sm-6">
@@ -238,15 +305,15 @@
             </div>
         </div>
     </div>
-    <div class="container" style="padding: 20px; padding-right: 100px">
-        <button id="btnBlacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;" onclick="blacklist('{{ $customer->customer_id }}')">Blacklist</button>
-        <button id="btnUnblacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;" onclick="unblacklist('{{ $customer->customer_id }}')">Unblacklist</button>
-        <button id="btnPrint" type="button" class="btn btn-primary mr-4" title="Add" style="float: right; margin: 5px;">Print</button>
+    <div class="container" style="margin-bottom: 25px">
+        <button id="btnBlacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="blacklist('{{ $customer->customer_id }}')">Blacklist</button>
+        <button id="btnUnblacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="unblacklist('{{ $customer->customer_id }}')">Unblacklist</button>
+        <button id="btnPrint" type="button" class="btn btn-primary mr-4" title="Add" style="float: right; margin: 5px;width:100px">Print</button>
     </div>
     <div class="container custDetail">
         <div class="row">
-            <div class="col-sm-6">
-                <form method="post" action="{{ url('/searchByLoanId') }}" style="font-family: Roboto; color:black" class="form-inline">
+            <div class="col-sm-4">
+                <form method="post" action="{{ url('/searchByLoanId') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                     {{ csrf_field() }}
                     <input type="hidden" name="custId" class="form-control" value="{{ $customer->customer_id }}" hidden/>
                     <input type="text" name="search" class="form-control" placeholder="search by loan id"/>
@@ -255,8 +322,17 @@
                     </button>
                 </form>
             </div>
-            <div class="col-sm-6">
-                <button id="addLoan" type="button" class="btn btn-primary mr-2" title="Add" style="float: right;" onclick="showAddLoanModal();"><i class="fa fa-plus"></i> Add Loan</button>
+            <div class="col-sm-4" class="form-inline" style="display: flex; align-content: center; justify-content: center; flex-wrap: wrap; flex-direction: row; align-items: center;">
+                <span for="" class="control-label" style="margin-right: 10px;">Show Result</span>
+                <select class="form-control selectpicker" id="pagination" class="pagination" name="pagination" data-live-search="true" style="" onchange="showPagination()">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="col-sm-4">
+                <button id="addLoan" type="button" class="btn btn-primary mr-2" title="Add" style="float: right; width: 100px" onclick="showAddLoanModal();"><i class="fa fa-plus"></i> Add Loan</button>
             </div>
         </div>
     </div>
@@ -265,11 +341,11 @@
             <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th></th>
-                    <th>Loan Number</th>
+                    <th>Loan No</th>
                     <th>Loan Date</th>
                     <th>Loan Amount</th>
                     <th>Installment</th>
-                    <th>tenor</th>
+                    <th>Tenor</th>
                     <th>Collateral Description</th>
                     <th></th>
                 </tr>
@@ -281,7 +357,7 @@
                 >
                     <td id="icon{{ $loop->index }}"><i class="fa fa-angle-down"></i></td>
                     <td>{{ $data->loan_number}}</td>
-                    <td>{{ date("d/m/Y", strtotime($data->create_at))}}</td>
+                    <td>{{ date("d/m/Y", strtotime($data->loan_date))}}</td>
                     <td>{{ number_format($data->loan_amount, 2, ',', '.')}}</td>
                     <td>{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
                     <td>{{ $data->tenor}}</td>
@@ -351,6 +427,13 @@
         var index = 1;
         var customer = {!! json_encode($customer) !!};
         // console.log({!! json_encode($incomings->toArray()) !!});
+        $('#pagination').val({!! json_encode($paginate) !!});
+        function showPagination()
+        {
+            console.log(customer);
+            console.log("{{ url('/loan/') }}"+customer.customer_id+"?paginate=" + $('#pagination').val());
+            window.location = "{{ url('/loan/') }}/"+customer.customer_id+"?paginate=" + $('#pagination').val();
+        }
 
         $(function()
         {
@@ -570,7 +653,16 @@
         }
 
         function showHideRow(row) {
-            $("#hiddenLoan" + row).toggle();
+            
+            if ($("#hiddenLoan" + row).css('display') == 'none')
+            {
+                $('.hidden_row').css('display', 'none');
+                $("#hiddenLoan" + row).toggle();
+            }
+            else{
+                $("#hiddenLoan" + row).toggle();
+            }
+
             if ($('#loan' + row).attr('class') == 'inactive')
             {
                 $('#icon' + row).html('<i class="fa fa-angle-up"></i>');
@@ -583,32 +675,6 @@
                 $('#loan' + row).removeClass('active');
                 $('#loan' + row).addClass('inactive');
             }
-        }
-
-        function addLoanPayment(id)
-        {
-            var selectId = 'pay' + index;
-            
-            $('.form-horizontal.loan-modal').append('\
-                <div class="form-group row payData">\
-                    <div class="col-sm-5">\
-                        <select class="form-control selectpicker installmentId selectLoan" id="'+selectId+'" data-size="5" data-live-search="true"></select>\
-                    </div>\
-                    <div class="col-sm-4">\
-                        <input type="text" class="form-control amount-to-pay" id="payAmount'+index+'" placeholder="amount" onkeypress="return decimalWithMinusKeypress(event)">\
-                    </div>\
-                    <div class="col-sm-3">\
-                        <button type="button" class="btn btn-primary addPay" onclick=""> + </button>\
-                        <button type="button" class="btn btn-danger" onclick="$(this).parent().parent().remove()"> - </button>\
-                    </div>\
-                </div>\
-            ');
-            generatePay(id, selectId);
-            index++;
-
-            $('.addPay').on('click', function() {
-                addLoanPayment(id);
-            });
         }
 
         function generatePay(id,selectId)
@@ -671,11 +737,36 @@
                                 data: {
                                     payAmount : $('#payAmount').val(),
                                     loanId : $('#payLoanId').val(),
-                                    customerId : $('#payCustomerId').val()
+                                    customerId : $('#payCustomerId').val(),
+                                    paymentDate : $('#inputPaymentDate').val()
                                 },
                                 success : function(result)
                                 {
-                                    location.reload();
+                                    if (result.errNum == 1)
+                                    {
+                                        var text = "<ul>";
+                                    
+                                        $.each(result.errors, function(key, value){
+                                            for (var i=0; i<value.length; i++)
+                                            {
+                                                text += "<li>" + value[i] + "</li>";
+                                            }
+                                        });
+                                        text += "</ul>";
+
+                                        $.confirm({
+                                            title: 'Payment Failed',
+                                            content: text,
+                                            type: 'red',
+                                            typeAnimated: true,
+                                            icon: 'fa fa-warning',
+                                            buttons: {
+                                                close: function () {
+                                                }
+                                            }
+                                        });
+                                    }
+                                    // location.reload();
                                 }
                             });
                         }
@@ -822,6 +913,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
+                            $('#' + modalId)[0].reset();
                             $('#' + modalId).modal('hide');
                         }
                     },
@@ -836,7 +928,7 @@
 
 <style>
     .custDetail{
-        font-family: Roboto;
+        font-family: 'Roboto', cursive;
         font-size: 18px;
     }
 
@@ -863,8 +955,12 @@
     .breadcrumbs {
         margin-top: -25px;
         margin-bottom: 25px;
+        margin-left: -50px !important;
         cursor: pointer;
         font-size: 30px;
         color: #337ab7;
+    }
+    .dropdown.bootstrap-select.form-control.bs3{
+        width: 75px !important;
     }
 </style>

@@ -8,7 +8,7 @@
 @section('content')
     <br />
     <div class="container box">
-        <h2 align="center" style="color: #0877DE;"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo"> Koperasi Damai Sejahtera</h2><br />
+        <h2 align="center" style="color: #0877DE;"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo" style="margin-right: 20px;"> Koperasi Damai Sejahtera</h2><br />
         <h3 align="center" style="color: #0877DE;">User Login</h3><br />
         
         @if ($message = Session::get('error'))
@@ -31,7 +31,7 @@
         <form method="post" action="{{ url('/login/checklogin') }}" style="font-family: Roboto; color:black">
             {{ csrf_field() }}
             <div class="form-group">
-                <input type="text" name="username" class="form-control" placeholder="E-mail/Username"/>
+                <input type="text" name="username" class="form-control" placeholder="E-mail/ Username"/>
             </div>
             <div class="form-group">
                 <input type="password" name="password" class="form-control" placeholder="Password"/>

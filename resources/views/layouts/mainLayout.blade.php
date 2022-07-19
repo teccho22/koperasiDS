@@ -2,21 +2,22 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"   ></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Roboto&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/fontawesome.min.css" />  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />  
     <script type="text/javascript" src="{{ URL::asset('js/custom.js') }}"></script>
+    <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/5.0.7/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
     <script type="text/javascript" src="{{ URL::asset('js/moment.min.js') }}"></script>
     <link href="{{ URL::asset('css/jquery.datetimepicker.css') }}" rel="stylesheet">
     <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>  
     <script type="text/javascript" charset="utf-8" src="https://www.zoonman.com/projects/combobox/combobox.js"></script>
-    {{-- <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script> --}}
     <head>
         <title>@yield('title')</title>
         <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -39,12 +40,12 @@
                     <div class="subnav-content">
                         <a href="{{ route('disbursement') }}">Disbursement</a>
                         <a href="{{ route('npl') }}">NPL</a>
-                        <a href="#business">Business Growth</a>
+                        <a href="{{ route('businessGrowth') }}">Business Growth</a>
                     </div>
                 </div>
             </div>
             <span class="hamburger" onclick="openNav()">&#9776;</span>
-            <h3 align="left" style="color: #0877DE;"><a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo"> Koperasi Damai Sejahtera</a></h3><br />
+            <h3 align="left" style="color: #0877DE;"><a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo" style="margin-right: 20px;"> Koperasi Damai Sejahtera</a></h3><br />
         </div>
 
         <div class="content">
@@ -70,12 +71,17 @@
 </script>
 
 <style>
+    @font-face {
+        font-family: Righteous;
+        src: url('{{ URL::asset('font/Righteous-Regular.ttf') }}');
+    }
+
     body {
         background-image: url("{{ URL::asset('assets/images/Backgroundbg.png') }}");
         background-repeat: no-repeat;
         background-attachment: fixed;
-        background-position: right top; 
-        font-family: Righteous;
+        background-position: right top;
+        font-family: 'Righteous', cursive;
         font-size: 40px;
         font-weight: 400;
         line-height: 45px;
@@ -204,7 +210,7 @@
     }
 
     .jconfirm {
-        font-family: Righteous;
+        font-family: 'Righteous', cursive;
         font-size: 15px;
         line-height: normal !important;
     }
@@ -218,5 +224,28 @@
     .form-group.required span.control-label::after {
         content: " *";
         color: red;
+    }
+
+    input::-webkit-input-placeholder {
+        opacity: 0.7; /*Change the opacity between 0 and 1*/
+    }
+    textarea::-webkit-input-placeholder {
+        opacity: 0.7; /*Change the opacity between 0 and 1*/
+    }
+
+    .modal-body {
+        font-family: 'Roboto', cursive;
+    }
+
+    .Row {
+        display: table;
+        width: 100%; /*Optional*/
+        table-layout: fixed; /*Optional*/
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    .Column {
+        display: table-cell;
+        width: 46%;
     }
 </style>

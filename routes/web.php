@@ -25,6 +25,7 @@ Route::post('/customer/addCustomer', '\App\Http\Controllers\Customer\CustomerCon
 Route::post('/customer/editCustomer', '\App\Http\Controllers\Customer\CustomerController@editCustomer');
 Route::post('/customer/getEditData', '\App\Http\Controllers\Customer\CustomerController@getEditData');
 Route::post('/searchCustomer', '\App\Http\Controllers\Customer\CustomerController@searchCustomer');
+Route::post('/customer/paginate', '\App\Http\Controllers\Customer\CustomerController@paginate');
 
 Route::get('/loan/{id}', '\App\Http\Controllers\Loan\LoanController@index')->name('loan');
 Route::post('/addLoan', '\App\Http\Controllers\Loan\LoanController@addLoan');
@@ -52,7 +53,11 @@ Route::post('/deleteTransaction', '\App\Http\Controllers\Transaction\Transaction
 
 Route::get('/disbursement', '\App\Http\Controllers\Report\DisbursementController@index')->name('disbursement');
 Route::get('/searchDisbursement', '\App\Http\Controllers\Report\DisbursementController@searchDisbursement')->name('searchDisbursement');
+Route::get('/generateDisbursementExcel', '\App\Http\Controllers\Report\DisbursementController@generateDisbursementExcel')->name('generateDisbursementExcel');
 
 Route::get('/npl', '\App\Http\Controllers\Report\NplController@index')->name('npl');
 Route::get('/searchNpl', '\App\Http\Controllers\Report\NplController@searchNpl')->name('searchNpl');
 
+Route::get('/businessGrowth', '\App\Http\Controllers\Report\BussinesGrowthController@index')->name('businessGrowth');
+Route::get('/chart', '\App\Http\Controllers\Report\BussinesGrowthController@chart')->name('chart');
+Route::get('/generateChart', '\App\Http\Controllers\Report\BussinesGrowthController@generateChart')->name('generateChart');
