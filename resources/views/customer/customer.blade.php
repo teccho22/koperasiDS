@@ -286,7 +286,7 @@
             <form method="post" action="{{ url('/searchCustomer') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                 {{ csrf_field() }}
                 <div class="Column">
-                    <input type="text" name="search" class="form-control" placeholder="Name/KTP/Customer Id"/>
+                    <input type="text" name="search" class="form-control" placeholder="Name/ KTP/ Customer ID"/>
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-search"></i> Search
                     </button>
@@ -310,7 +310,7 @@
             <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
-                    <th>Customer Id</th>
+                    <th>Customer ID</th>
                     <th>Customer Name</th>
                     <th>KTP No.</th>
                     <th>Job</th>

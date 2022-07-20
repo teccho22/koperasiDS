@@ -177,7 +177,6 @@
             <thead style="background-color: #0877DE !important; color:#FFFFFF !important; letter-spacing: 1px;">
                 <tr>
                     <th>No.</th>
-                    <th>Id</th>
                     <th>Transaction Date</th>
                     <th>Category</th>
                     <th>Amount</th>
@@ -190,7 +189,6 @@
                 @foreach ($transaction as $data)
                 <tr>
                     <td>{{ ($transaction->currentPage()-1) * $transaction->perPage() + $loop->index + 1}}</td>
-                    <td>{{ str_pad($data->id, 4, '0', STR_PAD_LEFT)}}</td>
                     <td>
                         {{ date("d-M-Y", strtotime($data->transaction_date))}}
                     </td>

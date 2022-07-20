@@ -81,7 +81,7 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: right top;
-        font-family: 'Righteous', cursive;
+        font-family: 'Roboto', cursive;
         font-size: 40px;
         font-weight: 400;
         line-height: 45px;
@@ -89,6 +89,10 @@
         text-align: left;
         height: auto;
         flex: 1;
+    }
+
+    h3, h4, .sidenav {
+        font-family: 'Righteous', cursive;
     }
 
     .content {
@@ -210,7 +214,7 @@
     }
 
     .jconfirm {
-        font-family: 'Righteous', cursive;
+        font-family: 'Roboto', cursive;
         font-size: 15px;
         line-height: normal !important;
     }

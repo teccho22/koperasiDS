@@ -275,7 +275,7 @@
 
     {{-- customer detail --}}
     <div id="custDetail" class="container custDetail">
-        <div class="row breadcrumbs">
+        <div class="row breadcrumbs" style="font-family: 'Righteous', cursive;">
             <a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/back.png') }}"> <b>Customer/ Loan</b></a>
         </div>
         <div class="row">
@@ -492,15 +492,32 @@
                 // && v.loan_status != 'Haven\'t due yet' && v.loan_status != 'Paid'
             });
 
-            var loan = $.grep(loanList, function(v) {
-                return v.loan_id == id;
-            });
-            
-            var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount']
-
-            $('#payAmount').val(outstanding.toFixed(2));
-
-            $('#modalPayLoan').modal('show');
+            if (incoming.length > 0)
+            {
+                var loan = $.grep(loanList, function(v) {
+                    return v.loan_id == id;
+                });
+                
+                var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount']
+    
+                $('#payAmount').val(outstanding.toFixed(2));
+    
+                $('#modalPayLoan').modal('show');
+            }
+            else
+            {
+                $.confirm({
+                    title: 'Alert',
+                    content: 'Loan Already Paid',
+                    type: 'red',
+                    typeAnimated: true,
+                    icon: 'fa fa-warning',
+                    buttons: {
+                        close: function () {
+                        }
+                    }
+                });
+            }
         }
 
         function calculateLoan(event)
@@ -766,7 +783,9 @@
                                             }
                                         });
                                     }
-                                    // location.reload();
+                                    else{
+                                        location.reload();
+                                    }
                                 }
                             });
                         }
@@ -913,7 +932,7 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#' + modalId)[0].reset();
+                            $('#addCustomerForm')[0].reset();
                             $('#' + modalId).modal('hide');
                         }
                     },

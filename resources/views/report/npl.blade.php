@@ -32,7 +32,7 @@
                         </div>
                         <div class="col-sm-7">
                             <select class="form-control selectpicker" id="searchAgent" name="searchAgent" data-size="5" data-live-search="true" data-live-search-placeholder="Search">
-                                <option value="" selected>Please Choose One !!!</option>
+                                <option value="" selected>Please Choose One</option>
                                 @foreach ($agentList as $agent)
                                     <option value="{{ $agent->customer_agent }}">{{ $agent->customer_agent }}</option>
                                 @endforeach

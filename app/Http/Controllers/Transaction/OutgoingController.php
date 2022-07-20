@@ -20,8 +20,8 @@ class OutgoingController extends Controller
 
         $outgoing = DB::table('ms_outgoings')
                     ->where('is_active', 1)
-                    ->orderBy('outgoing_id', 'asc')
-                    ->orderBy('outgoing_date', 'asc')
+                    ->orderBy('outgoing_id', 'desc')
+                    ->orderBy('outgoing_date', 'desc')
                     ->paginate($paginate);
 
         return view('transaction/outgoing', [
