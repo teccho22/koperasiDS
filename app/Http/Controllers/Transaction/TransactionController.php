@@ -133,4 +133,37 @@ class TransactionController extends Controller
             return redirect()->route('transaction')->with(['success' => 'Data Berhasil Disimpan!']);
         }
     }
+
+    function searchTransaction(Request $request)
+    {
+        $transaction = DB::table('trx_account_mgmt')
+                    // ->leftJoin('ms_incomings', 'trx_account_mgmt.incoming_id', '=', 'ms_incomings.incoming_id')
+                    ->leftJoin('ms_incomings', function($join){
+                        $join->on('trx_account_mgmt.incoming_id', '=', 'ms_incomings.incoming_id');
+                    })
+                    ->leftJoin('ms_outgoings', 'trx_account_mgmt.outgoing_id', '=','ms_outgoings.outgoing_id')
+                    ->where('trx_account_mgmt.is_active', 1)
+                    ->where('trx_account_mgmt.trx_category', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere('trx_account_mgmt.id', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere(DB::raw('DATE_FORMAT(trx_account_mgmt.update_at, "%Y-%b-%d") = STR_TO_DATE("'.$request->search.'","%Y-%b-%d")'))
+                    ->select(
+                        'trx_account_mgmt.id',
+                        DB::raw('(CASE 
+                            WHEN trx_account_mgmt.trx_category ="Outgoing" THEN ms_outgoings.outgoing_date
+                            WHEN trx_account_mgmt.trx_category ="Incoming" THEN ms_incomings.incoming_date
+                            ELSE trx_account_mgmt.update_at
+                            END) AS transaction_date'),
+                        'trx_account_mgmt.trx_category',
+                        'trx_account_mgmt.trx_amount',
+                        'trx_account_mgmt.cash_account',
+                        'trx_account_mgmt.bank_account'
+                    )
+                    ->orderBy('trx_account_mgmt.id', 'desc')
+                    ->paginate(10);
+
+        return view('transaction/transaction', [
+            'transaction' => $transaction,
+            'paginate' => 10
+        ]);
+    }
 }

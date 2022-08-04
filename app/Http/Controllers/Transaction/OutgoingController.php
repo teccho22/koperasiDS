@@ -108,8 +108,7 @@ class OutgoingController extends Controller
             'outgoingId'       => 'required',
             'transactionDate'  => 'required',
             'category'         => 'required',
-            'amount'           => 'required',
-            'notes'            => 'required'
+            'editAmount'       => 'required'
         ];
 
         if ($this->validate($request, $rules))
@@ -172,5 +171,27 @@ class OutgoingController extends Controller
             ]);
         }
 
+    }
+
+    function searchOutgoing(Request $request)
+    {
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+
+        $outgoing = DB::table('ms_outgoings')
+                    ->where('is_active', 1)
+                    ->where('outgoing_category', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere('outgoing_id', 'LIKE', '%'.$request->search.'%')
+                    ->orderBy('outgoing_id', 'desc')
+                    ->orderBy('outgoing_date', 'desc')
+                    ->paginate($paginate);
+
+        return view('transaction/outgoing', [
+            'outgoing' => $outgoing,
+            'paginate' => $paginate
+        ]);
     }
 }

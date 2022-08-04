@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
+    <link rel="icon" href="{{ URL::asset('assets/images/Logo.png') }}">
     <head>
         <title>@yield('title')</title>
     </head>
@@ -21,7 +22,8 @@
         background-image: url("{{ URL::asset('assets/images/Backgroundbg.png') }}");
         background-repeat: no-repeat;
         background-attachment: fixed;
-        background-position: right; 
+        background-position: right;
+        background-size: contain;
         font-family: 'Righteous', cursive;
         font-size: 36px;
         font-weight: 400;

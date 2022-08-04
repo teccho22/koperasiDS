@@ -831,7 +831,8 @@ class LoanController extends Controller
             'customer' => $customer,
             'loanList' => $loanList,
             'incomings' => $incoming,
-            'collateralList' => $collateralList
+            'collateralList' => $collateralList,
+            'paginate' => 10
         ]);
     }
 

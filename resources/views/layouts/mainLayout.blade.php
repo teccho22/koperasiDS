@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/fontawesome.min.css" />  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />  
     <script type="text/javascript" src="{{ URL::asset('js/custom.js') }}"></script>
-    <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script>
+    {{-- <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script> --}}
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
@@ -18,6 +18,7 @@
     <link href="{{ URL::asset('css/jquery.datetimepicker.css') }}" rel="stylesheet">
     <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>  
     <script type="text/javascript" charset="utf-8" src="https://www.zoonman.com/projects/combobox/combobox.js"></script>
+    <link rel="icon" href="{{ URL::asset('assets/images/Logo.png') }}">
     <head>
         <title>@yield('title')</title>
         <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -51,6 +52,7 @@
         <div class="content">
             @yield('content')
         </div>
+        <hr>
         <div class="footer">
             <p>Teccho</p>
         </div>
@@ -78,6 +80,7 @@
 
     body {
         background-image: url("{{ URL::asset('assets/images/Backgroundbg.png') }}");
+        background-size: contain;
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-position: right top;
@@ -113,11 +116,12 @@
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: #e7e7e7;
+        /* background-color: #e7e7e7; */
         color: black;
         text-align: center;
         font-size: 15px;
         height: 35px;
+        margin-top: -10px
     }
 
     .hamburger {
@@ -251,5 +255,10 @@
     .Column {
         display: table-cell;
         width: 46%;
+    }
+
+    hr {
+        height: 1px;
+        background: #eaeaea;
     }
 </style>

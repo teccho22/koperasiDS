@@ -78,7 +78,7 @@
                                     <span for="" class="control-label">Loan Amount</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" id="loanAmount" name="loanAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" onkeydown="calculateLoan(event)"/>
+                                    <input type="text" id="loanAmount" name="loanAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" onkeydown="calculateLoan(event)" data-type="currency"/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -139,8 +139,8 @@
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
                                 <div class="col-sm-8 upload-file">
-                                    <i class="fa fa-camera file" style="margin-left: 0px"></i><span class="name">No file selected</span>
-                                    <input type="file" name="collateralFiles" id="collateralFile" class="form-control"/>
+                                    <i class="fa fa-camera file upload-file" style="margin-left: 0px"></i><span class="name">No file selected</span>
+                                    <input type="file" name="collateralFiles" id="collateralFile" class="form-control collateralFile"/>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -203,8 +203,8 @@
                                     <span for="" class="control-label">Collateral File</span>
                                 </div>
                                 <div class="col-sm-8 upload-file">
-                                    <i class="fa fa-camera file" style="margin-left: 0px"></i><span class="name">No file selected</span>
-                                    <input type="file" name="editCollateralFiles" id="editCollateralFiles" class="form-control"/>
+                                    <i class="fa fa-camera file edit-upload-file" style="margin-left: 0px"></i><span class="name">No file selected</span>
+                                    <input type="file" name="editCollateralFiles" id="editCollateralFiles" class="form-control editCollateralFiles"/>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -430,18 +430,16 @@
         $('#pagination').val({!! json_encode($paginate) !!});
         function showPagination()
         {
-            console.log(customer);
             console.log("{{ url('/loan/') }}"+customer.customer_id+"?paginate=" + $('#pagination').val());
             window.location = "{{ url('/loan/') }}/"+customer.customer_id+"?paginate=" + $('#pagination').val();
         }
 
         $(function()
         {
-            console.log(customer);
             if(customer.is_blacklist == 1)
             {
                 $('#addLoan').hide();
-                $('#isBlacklist').append(' <span style="color:red;border: 1px solid red; border-radius: 20px;background-color:#ffcaca;padding:5px;">BLACKLIST</span>');
+                $('#isBlacklist').append(' <span style="color:red;border: 1px solid red; border-radius: 20px;background-color:#ffcaca;padding:5px; font-size:15px">BLACKLIST</span>');
 
                 $('#btnBlacklist').hide();
                 $('#btnUnblacklist').show();
@@ -454,7 +452,11 @@
         });
 
         $("i.upload-file").click(function () {
-            $("input[type='file']").trigger('click');
+            $(".collateralFile").trigger('click');
+        });
+
+        $("i.edit-upload-file").click(function () {
+            $(".editCollateralFiles").trigger('click');
         });
 
         $('input[type="file"]').on('change', function() {
@@ -520,17 +522,97 @@
             }
         }
 
+        $("input[data-type='currency']").on({
+            keyup: function() {
+                formatCurrency($(this));
+            },
+            blur: function() { 
+                formatCurrency($(this), "blur");
+            }
+        });
+
+        function formatNumber(n) {
+            // format number 1000000 to 1,234,567
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+
+        function formatCurrency(input, blur) {
+            // appends $ to value, validates decimal side
+            // and puts cursor back in right position.
+            
+            // get input value
+            var input_val = input.val();
+            
+            // don't validate empty input
+            if (input_val === "") { return; }
+            
+            // original length
+            var original_len = input_val.length;
+
+            // initial caret position 
+            var caret_pos = input.prop("selectionStart");
+                
+            // check for decimal
+            if (input_val.indexOf(".") >= 0) {
+                // get position of first decimal
+                // this prevents multiple decimals from
+                // being entered
+                var decimal_pos = input_val.indexOf(".");
+
+                // split number by decimal point
+                var left_side = input_val.substring(0, decimal_pos);
+                var right_side = input_val.substring(decimal_pos);
+
+                // add commas to left side of number
+                left_side = formatNumber(left_side);
+
+                // validate right side
+                right_side = formatNumber(right_side);
+                
+                // On blur make sure 2 numbers after decimal
+                if (blur === "blur") {
+                right_side += "00";
+                }
+                
+                // Limit decimal to only 2 digits
+                right_side = right_side.substring(0, 2);
+
+                // join number by .
+                input_val = left_side + "." + right_side;
+
+            } else {
+                // no decimal entered
+                // add commas to number
+                // remove all non-digits
+                input_val = formatNumber(input_val);
+                input_val = input_val;
+                
+                // final formatting
+                if (blur === "blur") {
+                input_val += ".00";
+                }
+            }
+            
+            // send updated string to input
+            input.val(input_val);
+
+            // put caret back in the right position
+            var updated_len = input_val.length;
+            caret_pos = updated_len - original_len + caret_pos;
+            input[0].setSelectionRange(caret_pos, caret_pos);
+        }
+
         function calculateLoan(event)
         {
             var loan = 0;
             var tenor = 0;
             if (event.key != 'Backspace')
             {
-                loan = parseInt($('#loanAmount').val() + event.key);
+                loan = parseInt(Number($('#loanAmount').val().replace(/[^0-9.-]+/g,"")) + event.key);
             }
             else
             {
-                loan = parseInt($('#loanAmount').val().substring(0, $('#loanAmount').val().length - 1));
+                loan = parseInt($('#loanAmount').val().replace(/[^0-9.-]+/g,"").substring(0, $('#loanAmount').val().replace(/[^0-9.-]+/g,"").length - 1));
             }
 
             // provisionFee default 3%
@@ -542,6 +624,7 @@
             else
             {
                 $('#provisionFee').val(provisionFee);
+                formatCurrency($('#provisionFee'));
             }
 
             var disbursement = loan - provisionFee;
@@ -552,6 +635,7 @@
             else
             {
                 $('#disbursementAmount').val(disbursement);
+                formatCurrency($('#disbursementAmount'));
             }
 
             // interest default 2,5%
@@ -559,10 +643,12 @@
             var installmentAmount = 0;
             if ($('#tenor').val() != '')
             {
-                tenor = parseInt($('#tenor').val());
+                tenor = $('#tenor').val();
+
                 installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
                 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
+                formatCurrency($('#installmentAmount'));
             }
 
         }
@@ -580,13 +666,15 @@
             }
 
             var installmentAmount = 0;
-            var loan = parseInt($('#loanAmount').val());
+            var loan = Number($('#loanAmount').val().replace(/[^0-9.-]+/g,""));
             if ($('#tenor').val() != '' && $('#loanAmount').val() != '')
             {
                 tenor = $('#tenor').val();
+
                 installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
+                formatCurrency($('#installmentAmount'));
             }
         }
 
@@ -601,17 +689,18 @@
             {
                 tenor = parseInt($('#tenor').val().substring(0, $('#tenor').val().length - 1));
             }
-            
+
             var interestRate = parseFloat($('#interestRate').val());
-            var loan = parseInt($('#loanAmount').val());
+            var loan = Number($('#loanAmount').val().replace(/[^0-9.-]+/g,""));
             var installmentAmount = 0;
-            if (tenor != 0 && $('#loanAmount').val() != '')
+            if ($('#loanAmount').val() != '')
             {
-                installmentAmount = loan * (1 + (((interestRate/100) * tenor)))/tenor;
+                installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
 
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
+                formatCurrency($('#installmentAmount'));
             }
-        }
+        }           
 
         function validate(e)
         {
@@ -623,6 +712,21 @@
                         btnClass: 'btn-primary',
                         action: function(){
                             // console.log($('#installmentAmount').val());
+                            var loan = Number($('#loanAmount').val().replace(/[^0-9.-]+/g,""));
+                            $('#loanAmount').val(loan);
+
+                            var installmentAmount = Number($('#installmentAmount').val().replace(/[^0-9.-]+/g,""));
+                            $('#installmentAmount').val(loan);
+                            var provisionFee = Number($('#provisionFee').val().replace(/[^0-9.-]+/g,""));
+                            $('#provisionFee').val(loan);
+                            var disbursementAmount = Number($('#disbursementAmount').val().replace(/[^0-9.-]+/g,""));
+                            $('#disbursementAmount').val(loan);
+
+                            $("<input />").attr("type", "hidden")
+                            .attr("name", "loanAmount")
+                            .attr("value", $('#loanAmount').val())
+                            .appendTo("#addCustomerForm");
+
                             $("<input />").attr("type", "hidden")
                             .attr("name", "installmentAmount")
                             .attr("value", $('#installmentAmount').val())

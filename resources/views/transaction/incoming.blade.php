@@ -57,7 +57,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)"/> 
+                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)" data-type="currency"/> 
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -120,7 +120,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)"/> 
+                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)" data-type="currency"/> 
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -151,7 +151,7 @@
             <form method="post" action="{{ url('/searchIncoming') }}" style="font-family: 'Roboto', cursive; color:black" class="form-inline">
                 {{ csrf_field() }}
                 <div class="Column">
-                    <input type="text" name="search" class="form-control" placeholder="Id/Date/Category"/>
+                    <input type="text" name="search" class="form-control" placeholder="ID/ Date/ Category"/>
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-search"></i> Search
                     </button>
@@ -247,13 +247,93 @@
             
             $('#editIncomingId').val(value[0].incoming_id);
             $('#editTransactionDate').val(date[0]);
-            $('#editAmount').val(value[0].incoming_amount.toString());
+            $('#editAmount').val(formatNumber(value[0].incoming_amount.toString()));
             $('#editNotes').val(value[0].notes);
             
             $('#editCategory').val(value[0].incoming_category);
             $('.selectpicker').selectpicker('refresh');
 
             $('#modalEditIncoming').modal('show');
+        }
+
+        $("input[data-type='currency']").on({
+            keyup: function() {
+                formatCurrency($(this));
+            },
+            blur: function() { 
+                formatCurrency($(this), "blur");
+            }
+        });
+
+        function formatNumber(n) {
+            // format number 1000000 to 1,234,567
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+
+        function formatCurrency(input, blur) {
+            // appends $ to value, validates decimal side
+            // and puts cursor back in right position.
+            
+            // get input value
+            var input_val = input.val();
+            
+            // don't validate empty input
+            if (input_val === "") { return; }
+            
+            // original length
+            var original_len = input_val.length;
+
+            // initial caret position 
+            var caret_pos = input.prop("selectionStart");
+                
+            // check for decimal
+            if (input_val.indexOf(".") >= 0) {
+                // get position of first decimal
+                // this prevents multiple decimals from
+                // being entered
+                var decimal_pos = input_val.indexOf(".");
+
+                // split number by decimal point
+                var left_side = input_val.substring(0, decimal_pos);
+                var right_side = input_val.substring(decimal_pos);
+
+                // add commas to left side of number
+                left_side = formatNumber(left_side);
+
+                // validate right side
+                right_side = formatNumber(right_side);
+                
+                // On blur make sure 2 numbers after decimal
+                if (blur === "blur") {
+                right_side += "00";
+                }
+                
+                // Limit decimal to only 2 digits
+                right_side = right_side.substring(0, 2);
+
+                // join number by .
+                input_val = left_side + "." + right_side;
+
+            } else {
+                // no decimal entered
+                // add commas to number
+                // remove all non-digits
+                input_val = formatNumber(input_val);
+                input_val = input_val;
+                
+                // final formatting
+                if (blur === "blur") {
+                input_val += ".00";
+                }
+            }
+            
+            // send updated string to input
+            input.val(input_val);
+
+            // put caret back in the right position
+            var updated_len = input_val.length;
+            caret_pos = updated_len - original_len + caret_pos;
+            input[0].setSelectionRange(caret_pos, caret_pos);
         }
 
         function validate(e)
@@ -265,6 +345,14 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
+                            var amount = Number($('#amount').val().replace(/[^0-9.-]+/g,""));
+                            $('#amount').val(amount);
+
+                            $("<input />").attr("type", "hidden")
+                            .attr("name", "amount")
+                            .attr("value", $('#amount').val())
+                            .appendTo("#addIncomingForm");
+
                             $('#addIncomingForm').submit();
                             return true;
                         }
@@ -285,6 +373,14 @@
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
+                            var amount = Number($('#editAmount').val().replace(/[^0-9.-]+/g,""));
+                            $('#editAmount').val(amount);
+
+                            $("<input />").attr("type", "hidden")
+                            .attr("name", "editAmount")
+                            .attr("value", $('#editAmount').val())
+                            .appendTo("#editOutgoingForm");
+
                             $('#editIncomingForm').submit();
                             return true;
                         }

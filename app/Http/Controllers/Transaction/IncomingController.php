@@ -107,8 +107,7 @@ class IncomingController extends Controller
             'incomingId'       => 'required',
             'transactionDate'  => 'required',
             'category'         => 'required',
-            'amount'           => 'required',
-            'notes'            => 'required'
+            'amount'           => 'required'
         ];
 
         if ($this->validate($request, $rules))
@@ -171,5 +170,30 @@ class IncomingController extends Controller
             ]);
         }
 
+    }
+
+    function searchIncoming(Request $request)
+    {
+        DB::connection()->enableQueryLog();
+        $paginate = 10;
+        if ($request->paginate)
+        {
+            $paginate = $request->paginate;
+        }
+
+        $incoming = DB::table('ms_incomings')
+                    ->where('is_active', 1)
+                    ->where('incoming_category', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere('incoming_id', 'LIKE', '%'.$request->search.'%')
+                    ->orderBy('loan_due_date', 'asc')
+                    ->orderBy('incoming_date', 'asc')
+                    ->paginate($paginate);
+        // dd(DB::getQueryLog());
+        // dd($incoming);
+
+        return view('transaction/incoming', [
+            'incoming' => $incoming,
+            'paginate' => $paginate
+        ]);
     }
 }

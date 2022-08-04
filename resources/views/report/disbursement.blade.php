@@ -66,6 +66,13 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-sm-9">
+                        <button type="submit" class="btn btn-primary" name="submit" value="submit" style="float: right">
+                            <i class="fa fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-sm-6" style="">
                         <span for="" class="control-label" style="margin-right: 10px;">Show Result</span>
                         <select class="form-control selectpicker paginateSelector" id="pagination" name="paginate" data-live-search="true" style="margin-right: auto;" onchange="showPagination()">
@@ -74,11 +81,6 @@
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                    </div>
-                    <div class="col-sm-6">
-                        <button type="submit" class="btn btn-primary" name="submit" value="submit" style="float: right">
-                            <i class="fa fa-search"></i> Search
-                        </button>
                     </div>
                 </div>
             </form>
@@ -89,7 +91,7 @@
                     <th>No.</th>
                     <th>Outgoing Date</th>
                     <th>Loan No.</th>
-                    <th>Customer Id</th>
+                    <th>Customer ID</th>
                     <th>Customer Name</th>
                     <th>Customer Proffesion</th>
                     <th style="width: 150px; word-wrap: break-word;">Customer Address</th>

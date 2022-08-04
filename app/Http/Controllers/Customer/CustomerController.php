@@ -6,12 +6,17 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Customer;
 use DB;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Str;
+use Auth;
 
 class CustomerController extends Controller
 {
     //
+    public function __construct(Request $request)
+    {
+        // dd(Auth::check() );
+    }
+
     function index(Request $request)
     {
         $paginate = 10;
@@ -372,7 +377,8 @@ class CustomerController extends Controller
             'customer' => $customer,
             'agentList' => $agentList,
             'jobList' => $jobList,
-            'collateralList' => $collateralList
+            'collateralList' => $collateralList,
+            'paginate' => 10
         ]);
     }
 }
