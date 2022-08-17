@@ -37,6 +37,7 @@ Route::get('/', function () {
     Route::post('/searchByLoanId','\App\Http\Controllers\Loan\LoanController@searchByLoanId');
     Route::post('/blacklist','\App\Http\Controllers\Loan\LoanController@blacklist');
     Route::post('/unblacklist','\App\Http\Controllers\Loan\LoanController@unblacklist');
+    Route::post('/generateSp','\App\Http\Controllers\Loan\LoanController@generateSp');
 
     // transaction
     Route::get('/incoming', '\App\Http\Controllers\Transaction\IncomingController@index')->name('incoming');

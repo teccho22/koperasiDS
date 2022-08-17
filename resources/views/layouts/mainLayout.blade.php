@@ -121,7 +121,7 @@
         text-align: center;
         font-size: 15px;
         height: 35px;
-        margin-top: -10px
+        margin-top: -20px;
     }
 
     .hamburger {

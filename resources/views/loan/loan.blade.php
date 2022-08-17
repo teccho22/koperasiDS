@@ -308,7 +308,14 @@
     <div class="container" style="margin-bottom: 25px">
         <button id="btnBlacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="blacklist('{{ $customer->customer_id }}')">Blacklist</button>
         <button id="btnUnblacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="unblacklist('{{ $customer->customer_id }}')">Unblacklist</button>
-        <button id="btnPrint" type="button" class="btn btn-primary mr-4" title="Add" style="float: right; margin: 5px;width:100px">Print</button>
+        <div class="dropdowns">
+            <button onclick="myFunction()" class="btn btn-primary mr-4 dropbtn" id="btnPrint" style="float: right; margin: 5px;width:100px">Print</button>
+            <div id="myDropdown" class="dropdowns-content">
+              <a onclick="generateSp('1')" id="sp1" hidden>SP 1</a>
+              <a onclick="generateSp('2')" id="sp2" hidden>SP 2</a>
+              <a onclick="generateSp('3')" id="sp3" hidden>SP 3</a>
+            </div>
+          </div>
     </div>
     <div class="container custDetail">
         <div class="row">
@@ -418,6 +425,16 @@
             {{ $loanList->links() }}
         </div>
     </div>
+
+    <form hidden id="form" method="post" target="sp">
+        <input type="text" name="customerDetail" id="customerDetail" value="">
+        <input type="text" name="installmentDetail" id="installmentDetail" value="">
+        <input type="text" name="installmentPaid" id="installmentPaid" value="">
+        <input type="text" name="installmentUnpaid" id="installmentUnpaid" value="">
+        <input type="text" name="spNumber" id="spNumber" value="">
+        <input type="text" name="installmentPaidDetail" id="installmentPaidDetail" value="">
+        {{ csrf_field() }}
+    </form>
 @stop
 
 @section('javascript')
@@ -426,12 +443,29 @@
         var incomingList = {!! json_encode($incomings->toArray()) !!};
         var index = 1;
         var customer = {!! json_encode($customer) !!};
+        var collect = {!! json_encode($collect) !!};
         // console.log({!! json_encode($incomings->toArray()) !!});
         $('#pagination').val({!! json_encode($paginate) !!});
         function showPagination()
         {
-            console.log("{{ url('/loan/') }}"+customer.customer_id+"?paginate=" + $('#pagination').val());
             window.location = "{{ url('/loan/') }}/"+customer.customer_id+"?paginate=" + $('#pagination').val();
+        }
+
+        function myFunction() {
+            document.getElementById("myDropdown").classList.toggle("show");
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdowns-content");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
         }
 
         $(function()
@@ -448,6 +482,26 @@
             {
                 $('#btnBlacklist').show();
                 $('#btnUnblacklist').hide();
+            }
+
+            if (collect < 3)
+            {
+                $('.dropdowns').hide();
+            }
+            else
+            {
+                if (collect == 3)
+                {
+                    $('#sp1').show();
+                }
+                if (collect == 4)
+                {
+                    $('#sp2').show();
+                }
+                if (collect == 5)
+                {
+                    $('#sp3').show();
+                }
             }
         });
 
@@ -716,11 +770,11 @@
                             $('#loanAmount').val(loan);
 
                             var installmentAmount = Number($('#installmentAmount').val().replace(/[^0-9.-]+/g,""));
-                            $('#installmentAmount').val(loan);
+                            $('#installmentAmount').val(installmentAmount);
                             var provisionFee = Number($('#provisionFee').val().replace(/[^0-9.-]+/g,""));
-                            $('#provisionFee').val(loan);
+                            $('#provisionFee').val(provisionFee);
                             var disbursementAmount = Number($('#disbursementAmount').val().replace(/[^0-9.-]+/g,""));
-                            $('#disbursementAmount').val(loan);
+                            $('#disbursementAmount').val(disbursementAmount);
 
                             $("<input />").attr("type", "hidden")
                             .attr("name", "loanAmount")
@@ -1045,11 +1099,93 @@
                 }
             });
         }
+
+        function generateSp(sp)
+        {
+            $.ajax
+            ({
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                dataType : 'json',
+                type: 'POST',
+                url: "{{ url('/generateSp') }}",
+                data: {
+                    spNo : sp,
+                    customerId : customer.customer_id
+                },
+                success: function(result)
+                {
+                    if (result['errNum'] == 0)
+                    {
+                        var custDetail = JSON.stringify(result['custDetail']);
+                        var installmentDetail = JSON.stringify(result['installmentDetail']);
+                        var installmentPaid = JSON.stringify(result['installmentPaid']);
+                        var installmentUnpaid = JSON.stringify(result['installmentUnpaid']);
+                        var installmentPaidDetail = JSON.stringify(result['installmentPaidDetail']);
+                        $('#customerDetail').val(custDetail);
+                        $('#installmentDetail').val(installmentDetail);
+                        $('#installmentPaid').val(installmentPaid);
+                        $('#installmentUnpaid').val(installmentUnpaid);
+                        $('#spNumber').val(sp);
+                        $('#installmentPaidDetail').val(installmentPaidDetail);
+                        console.log($('#spNumber').val());
+    
+                        var bpForm = document.getElementById("form");
+    
+                        bpForm.setAttribute("action","{{ URL::asset('assets/template/sp.php') }}");
+    
+                        exportwindow = window.open('', "sp", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+                        bpForm.submit();
+                    }
+                }
+            });
+        }
     </script>
 @stop
 
 
 <style>
+    .dropbtn {
+        background-color: #04AA6D;
+        color: white;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .dropbtn:hover, .dropbtn:focus {
+        background-color: #3e8e41;
+    }
+
+    .dropdowns {
+        float: right;
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdowns-content {
+        display: none;
+        position: absolute;
+        background-color: #fffefe;
+        min-width: 110px;
+        overflow: auto;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        right: 0;
+        z-index: 1;
+        font-size: 15px;
+        margin-top: 40px
+    }
+
+    .dropdowns-content a {
+        color: black;
+        padding: 0px 15px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdowns a:hover {background-color: #ddd;}
+
+    .show {display: block;}
+
     .custDetail{
         font-family: 'Roboto', cursive;
         font-size: 18px;

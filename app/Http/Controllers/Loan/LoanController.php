@@ -69,7 +69,7 @@ class LoanController extends Controller
                 $checkIncoming = DB::table('ms_incomings')->where('loan_id', $loan->loan_id)
                     ->where('is_active', 1)
                     ->where('incoming_category', 'Installment')
-                    ->where('loan_status', 'Due')
+                    ->where('loan_status', 'not like', 'Paid')
                     ->whereDate(DB::raw("(DATE_FORMAT(DATE_ADD(loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d'))"), '<', date('Y-m-d'))
                     ->update(
                         [
@@ -95,8 +95,13 @@ class LoanController extends Controller
                         AND i.is_active = 1
                 ")[0]->CountOverdue;
 
-                if ($checkCollectLoan> 0 && $checkCollectLoan < 5)
+                if ($checkCollectLoan > 0)
                 {
+                    if ($checkCollectLoan > 4)
+                    {
+                        $checkCollectLoan = 4;
+                    }
+
                     $loanDpd = DB::select("
                         SELECT 
                             min(loan_due_date),
@@ -213,8 +218,13 @@ class LoanController extends Controller
             ");
 
             // update customer collect
-            if ($checkCollectCustomer > 0 && $checkCollectCustomer < 5)
+            if ($checkCollectCustomer > 0)
             {
+                if ($checkCollectCustomer > 4)
+                {
+                    $checkCollectCustomer = 4;
+                }
+
                 DB::statement("
                     update customers
                     set
@@ -253,12 +263,24 @@ class LoanController extends Controller
                                                 ->where('is_active', 1)
                                                 ->get();
 
+            $maxCollect = DB::select("
+                SELECT
+                    max(loan_collect) as collect
+                FROM
+                    ms_loans
+                WHERE
+                    customer_id = '$id'
+                    AND loan_id='$loan->loan_id'
+                    AND is_active = 1
+            ")[0]->collect;
+
             return view('loan/loan', [
                 'customer' => $customer,
                 'loanList' => $loanList,
                 'incomings' => $incoming,
                 'collateralList' => $collateralList,
-                'paginate' => $paginate
+                'paginate' => $paginate,
+                'collect' => $maxCollect
             ]);
         }
         else{
@@ -268,7 +290,8 @@ class LoanController extends Controller
                 'loanList' => $loanList,
                 'incomings' => $incoming,
                 'collateralList' => $collateralList,
-                'paginate' => $paginate
+                'paginate' => $paginate,
+                'collect' => 0
             ]);
         }
     }
@@ -557,10 +580,10 @@ class LoanController extends Controller
             ");
 
             $installment = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
-            $outstanding = $request->payAmount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
+            $outstanding = floatval($request->payAmount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0));
             $incomingId = $installmentAmount[0]->incoming_id;
 
-            if($outstanding < 0)
+            if(intval($outstanding) < 0)
             {
                 // Not Fully Paid
                 DB::statement("
@@ -576,7 +599,7 @@ class LoanController extends Controller
                         AND is_active = 1
                 ");
             }
-            else if ($outstanding == 0)
+            else if (intval($outstanding) == 0)
             {
                 // paid
                 DB::statement("
@@ -592,7 +615,7 @@ class LoanController extends Controller
                         AND is_active = 1
                 ");
             }
-            else if ($outstanding  > 0)
+            else if (intval($outstanding)  > 0)
             {
                 DB::statement("
                     update ms_incomings
@@ -905,6 +928,158 @@ class LoanController extends Controller
                     'errStr' => 'Unblacklist Failed'
                 ]);
             }
+        }
+    }
+
+    function generateSp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'spNo'              => 'required',
+            'customerId'        => 'required'
+        ]);
+
+        if (!$validator->fails())
+        {
+            $limit = $request->spNo + 1;
+            // get loan detail
+            $loanDetail = DB::select("
+                SELECT
+                    l.loan_id,
+                    max(l.loan_dpd),
+                    max(l.loan_collect)
+                FROM
+                    ms_loans l
+                WHERE 
+                    l.customer_id='$request->customerId'
+                    AND l.is_active=1
+                GROUP BY
+                    l.loan_id
+                ORDER BY l.loan_dpd DESC, l.loan_collect DESC
+                LIMIT 1
+            ")[0];
+
+            // get customer detail
+            $customerDetails = DB::select("
+                SELECT
+                    c.customer_name,
+                    c.customer_address,
+                    l.loan_amount,
+                    l.installment_amount,
+                    l.tenor,
+                    l.collateral_description
+                FROM
+                    customers c,
+                    ms_loans l
+                WHERE
+                    c.customer_id='$request->customerId'
+                    AND c.is_active=1
+                    AND c.customer_id = l.customer_id
+                    AND l.is_active=1
+                    AND l.loan_id='$loanDetail->loan_id'
+            ")[0];
+            
+
+            // get installment
+            if ($limit > 3)
+            {
+                $installmentDetail = DB::select("
+                    SELECT
+                        GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y')) as month
+                    FROM
+                        ms_incomings i
+                    WHERE
+                        i.loan_id = '$loanDetail->loan_id'
+                        AND i.is_active = 1
+                        AND i.loan_status='Overdue'
+                ")[0];
+
+                $selectIncoming = DB::select("
+                    SELECT
+                        GROUP_CONCAT(incoming_id) ids
+                    FROM ms_incomings
+                    WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
+                ")[0];
+            }
+            else
+            {
+                $installmentDetail = DB::select ("
+                    SELECT
+                        SUBSTRING_INDEX(GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y')),',',$limit) as month
+                    FROM
+                        ms_incomings i
+                    WHERE
+                        i.loan_id = '$loanDetail->loan_id'
+                        AND i.is_active = 1
+                        AND i.loan_status='Overdue'
+                ")[0];
+
+                $selectIncoming = DB::select("
+                    SELECT
+                        SUBSTRING_INDEX(GROUP_CONCAT(incoming_id),',',$limit) ids
+                    FROM ms_incomings
+                    WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
+                ")[0];
+            }
+
+            $installmentPaid = DB::select ("
+                SELECT
+                    IFNULL(SUM(i.incoming_amount), 0) total_paid,
+                    count(i.loan_status) count_paid
+                FROM
+                    ms_incomings i
+                WHERE
+                    i.loan_id = '$loanDetail->loan_id'
+                    AND i.is_active = 1
+                    AND i.loan_status IN ('Paid', 'Not Fully Paid')
+            ");
+
+            $installmentPaidDetail = DB::select("
+                SELECT
+                    GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y')) as month
+                FROM
+                    ms_incomings i
+                WHERE
+                    i.loan_id = '$loanDetail->loan_id'
+                    AND i.is_active = 1
+                    AND i.loan_status='Paid'
+            ")[0];
+
+            $installmentUnpaid = DB::select ("
+                SELECT
+                    count(i.loan_status) count_unpaid,
+                    (l.installment_amount * count(i.loan_status)) total_unpaid
+                FROM
+                    ms_incomings i,
+                    ms_loans l
+                WHERE
+                    l.loan_id = '$loanDetail->loan_id'
+                    AND i.loan_id = l.loan_id
+                    AND i.is_active = 1
+                    AND i.loan_status='Overdue'
+                    AND i.incoming_id IN ($selectIncoming->ids)
+                GROUP BY l.installment_amount
+            ");
+
+            return response()->json([
+                'errNum' => 0,
+                'errStr' => 'Success',
+                'redirect' => 'sp',
+                'custDetail' => $customerDetails,
+                'installmentDetail' => $installmentDetail,
+                'installmentPaid'   => $installmentPaid,
+                'installmentUnpaid'   => $installmentUnpaid,
+                'installmentPaidDetail' => $installmentPaidDetail
+            ]);
+        }
+        else
+        {
+            return response()->json([
+                'errNum' => 1,
+                'errStr' => 'Generate Sp Failed',
+                'redirect' => 'loan',
+                'custId' => $request->customerId,
+                'errors' => $validator->errors()
+            ]);
         }
     }
 }
