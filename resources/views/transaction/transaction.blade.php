@@ -204,7 +204,14 @@
                         @elseif ($data->trx_category == 'BankInterest')
                             Bank Interest
                         @else
-                            {{ $data->trx_category }}
+                            
+                            @if ($data->incoming_category == null && $data->outgoing_category != null)
+                                {{ $data->trx_category }} - {{ $data->outgoing_category }}
+                            @elseif ($data->outgoing_category == null && $data->incoming_category != null)
+                                {{ $data->trx_category }} - {{ $data->incoming_category }}
+                            @else
+                                {{ $data->trx_category }}
+                            @endif
                         @endif
                     </td>
                     <td>Rp{{ number_format($data->trx_amount, 2, ',', '.')}}</td>

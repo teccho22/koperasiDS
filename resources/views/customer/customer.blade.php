@@ -46,6 +46,14 @@
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
+                                    <span for="" class="control-label">Loan Date</span>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="date" class="form-control" id="inputLoanDate"  name="loanDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                </div>
+                            </div>
+                            <div class="form-group row required">
+                                <div class="col-sm-4">
                                     <span for="" class="control-label">Customer Name</span>
                                 </div>
                                 <div class="col-sm-8">

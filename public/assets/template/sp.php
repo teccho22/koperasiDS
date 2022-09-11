@@ -71,12 +71,12 @@
             <tr>
                 <td>Pokok Hutang</td>
                 <td style="padding-left: 75px;">:</td>
-                <td>Rp <span id="loanAmount"></span></td>
+                <td>Rp<span id="loanAmount"></span></td>
             </tr>
             <tr>
                 <td>Cicilan per Bulan</td>
                 <td style="padding-left: 75px;">:</td>
-                <td>Rp <span id="installmentAmount"></span></td>
+                <td>Rp<span id="installmentAmount"></span></td>
             </tr>
             <tr>
                 <td>Durasi hutang</td>
@@ -85,7 +85,7 @@
             </tr>
             </table>
             <p>untuk segera membayar cicilan hutangnya ke KSP Damai Sejahtera. <span id="paid"></span>, sehingga sampai dengan saat ini menunggak <span id="unpaid"></span></p>
-            <p>Jika dalam 30 hari sejak SP3 diterbitkan masih belum ada pembayaran hutang dari saudara, maka dengan sangat amat terpaksa KSP akan <span style="text-decoration: underline;"><b>MENJUAL</b></span> jaminan yang saudara titipkan kepada kami yaitu <b id="collateralDesc" style="text-decoration: underline;"></b>. Uang hasil penjualan kendaran akan kami pakai untuk pelunasan hutang, dan sisanya akan kami kembalikan ke saudara.</p>
+            <p class="sp3" hidden>Jika dalam 30 hari sejak SP3 diterbitkan masih belum ada pembayaran hutang dari saudara, maka dengan sangat amat terpaksa KSP akan <span style="text-decoration: underline;"><b>MENJUAL</b></span> jaminan yang saudara titipkan kepada kami yaitu <b id="collateralDesc" style="text-decoration: underline;"></b>. Uang hasil penjualan kendaran akan kami pakai untuk pelunasan hutang, dan sisanya akan kami kembalikan ke saudara.</p>
             <p>Demikian pemberitahuan kami. Terima kasih atas perhatian anda.</p>
             <br>
             <p>Malang, <span id="date"></span></p>
@@ -114,6 +114,11 @@
         $('#installmentAmount').html(parseFloat(customerDetail['installment_amount'], 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
         $('#tenor').html(customerDetail['tenor']);
 
+        if (spNumber == 3)
+        {
+            $('.sp3').show();
+        }
+
         if (installmentPaid[0]['total_paid'] > 0)
         {
             $('#paid').html('Yang bersangkutan baru membayar ' + installmentPaid[0]['count_paid'] + 'x cicilan pada ' + installmentPaidDetail['month']);
@@ -123,7 +128,7 @@
             $('#paid').html('Yang bersangkutan belum membayar cicilan');
         }
 
-        $('#unpaid').html(installmentUnpaid[0]['count_unpaid'] + 'x cicilan untuk bulan ' + installmentDetail['month'] + ' sejumlah Rp ' + parseFloat(installmentUnpaid[0]['total_unpaid'], 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString() + ',-.');
+        $('#unpaid').html(installmentUnpaid[0]['count_unpaid'] + 'x cicilan untuk bulan ' + installmentDetail['month'] + ' sejumlah Rp' + parseFloat(installmentUnpaid[0]['total_unpaid'], 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString() + '.');
 
         $('#collateralDesc').html(customerDetail['collateral_description']);
 

@@ -86,7 +86,7 @@
                                     <span for="" class="control-label">Interest Rate</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)"/> 
+                                    <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)" data-type="currency"/> 
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -94,7 +94,7 @@
                                     <span for="" class="control-label">Tenor</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" id="tenor" name="tenor" class="form-control" placeholder="6" onkeypress="numericKeypress(event)" onkeydown="calculateTenor(event)"/>
+                                    <input type="text" id="tenor" name="tenor" class="form-control" placeholder="6" onkeypress="numericKeypress(event)" onkeydown="calculateTenor(event)" data-type="currency"/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -102,7 +102,7 @@
                                     <span for="" class="control-label">Installment Amount</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" id="installmentAmount" name="installmentAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" disabled/>
+                                    <input type="text" id="installmentAmount" name="installmentAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" data-type="currency" disabled/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -110,7 +110,7 @@
                                     <span for="" class="control-label">Provision Fee</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" id="provisionFee" name="provisionFee" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" disabled/>
+                                    <input type="text" id="provisionFee" name="provisionFee" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" data-type="currency" disabled/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -118,7 +118,7 @@
                                     <span for="" class="control-label">Disbursement Amount</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" id="disbursementAmount" name="disbursementAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" disabled/>
+                                    <input type="text" id="disbursementAmount" name="disbursementAmount" class="form-control" placeholder="Rp 10.000.000,00" onkeypress="decimalKeypress(event)" data-type="currency" disabled/>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -255,7 +255,7 @@
                                     <span for="" class="control-label" style="font-size: 18px">Pay Amount</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control amount-to-pay" id="payAmount" placeholder="amount" onkeypress="return decimalWithMinusKeypress(event)">
+                                    <input type="text" class="form-control amount-to-pay" id="payAmount" placeholder="amount" data-type="currency" onkeypress="return decimalWithMinusKeypress(event)">
                                 </div>
                             </div>
                         </div>
@@ -554,9 +554,11 @@
                     return v.loan_id == id;
                 });
                 
-                var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount']
+                var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount'];
     
-                $('#payAmount').val(outstanding.toFixed(2));
+                $('#payAmount').val(outstanding);
+
+                formatCurrency($('#payAmount'));
     
                 $('#modalPayLoan').modal('show');
             }
@@ -1221,5 +1223,9 @@
     }
     .dropdown.bootstrap-select.form-control.bs3{
         width: 75px !important;
+    }
+
+    .dropdowns-content {
+        cursor: pointer;
     }
 </style>
