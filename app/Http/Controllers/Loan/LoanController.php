@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Customer;
 use App\Loan;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Auth;
 use Session;
@@ -24,6 +24,11 @@ class LoanController extends Controller
     //
     function index($id, Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         $paginate = 10;
 
         if ($request->paginate)
@@ -48,7 +53,7 @@ class LoanController extends Controller
                     'ms_loans.collateral_description',
                     'ms_loans.loan_id',
                     'ms_loans.customer_id',
-                    DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%d-%b-%Y") as loan_date')
+                    DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%Y-%b-%d") as loan_date')
                 )
                 ->orderBy('customer_id', 'asc')
                 ->paginate($paginate);
@@ -440,6 +445,7 @@ class LoanController extends Controller
                 $date = date('Y-m-d', strtotime($request->loanDate));
                 for ($i=0; $i < $tenor; $i++) { 
                     $date = date("Y-m-d", strtotime( $date . "+1 month"));
+                    
                     $incoming = DB::table('ms_incomings')->insertGetId(
                         [
                             'loan_id' => $loan,
@@ -528,6 +534,28 @@ class LoanController extends Controller
                     ->where('loan_id',$request->loanId)
                     ->where('is_active', 1)
                     ->update(['outgoing_date' => date('Y-m-d H:i:s', strtotime($request->editLoanDate))]);
+
+                $incomings = DB::select("
+                    SELECT 
+                        incoming_id       
+                    FROM 
+                        ms_incomings 
+                    WHERE 
+                        loan_id = $request->loanId
+                        and incoming_category = 'Installment'
+                        and is_active=1
+                ");
+
+                $date = date('Y-m-d', strtotime($request->editLoanDate));
+                for ($i=0; $i < sizeof($incomings); $i++) { 
+                    $date = date("Y-m-d", strtotime( $date . "+1 month"));
+                    
+                    DB::table('ms_incomings')
+                        ->where('incoming_id', $incomings[$i]->incoming_id)
+                        ->where('is_active',1)
+                        ->update(['loan_due_date' => date('Y-m-d H:i:s', strtotime($date))]);
+                    
+                };
 
                 DB::commit();
                 return redirect()->route('loan',[$request->custId])->withSuccess(['editLoanDate' => 'Success']);
@@ -984,7 +1012,7 @@ class LoanController extends Controller
             {
                 $installmentDetail = DB::select("
                     SELECT
-                        GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y')) as month
+                        GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y') SEPARATOR ', ') as month
                     FROM
                         ms_incomings i
                     WHERE
@@ -995,7 +1023,7 @@ class LoanController extends Controller
 
                 $selectIncoming = DB::select("
                     SELECT
-                        GROUP_CONCAT(incoming_id) ids
+                        GROUP_CONCAT(incoming_id SEPARATOR ', ') ids
                     FROM ms_incomings
                     WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
                 ")[0];
@@ -1004,7 +1032,7 @@ class LoanController extends Controller
             {
                 $installmentDetail = DB::select ("
                     SELECT
-                        SUBSTRING_INDEX(GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y')),',',$limit) as month
+                        SUBSTRING_INDEX(GROUP_CONCAT(DATE_FORMAT(i.loan_due_date,'%M %Y') SEPARATOR ', '),', ',$limit) as month
                     FROM
                         ms_incomings i
                     WHERE
@@ -1015,7 +1043,7 @@ class LoanController extends Controller
 
                 $selectIncoming = DB::select("
                     SELECT
-                        SUBSTRING_INDEX(GROUP_CONCAT(incoming_id),',',$limit) ids
+                        SUBSTRING_INDEX(GROUP_CONCAT(incoming_id SEPARATOR ', '),', ',$limit) ids
                     FROM ms_incomings
                     WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
                 ")[0];
@@ -1076,6 +1104,71 @@ class LoanController extends Controller
             return response()->json([
                 'errNum' => 1,
                 'errStr' => 'Generate Sp Failed',
+                'redirect' => 'loan',
+                'custId' => $request->customerId,
+                'errors' => $validator->errors()
+            ]);
+        }
+    }
+
+    function generateAggrementLetter(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'loanId'     => 'required',
+            'customerId' => 'required'
+        ]);
+
+        if (!$validator->fails())
+        {
+            $loanDetail = DB::select("
+                SELECT
+                    l.loan_id,
+                    l.loan_number,
+                    l.loan_amount,
+                    l.interest_rate,
+                    l.provision_fee,
+                    l.disbursement_amount,
+                    l.installment_amount,
+                    l.tenor,
+                    l.collateral_description,
+                    DATE_FORMAT(l.create_at, '%d %M %Y') as loan_date,
+                    DATE_FORMAT(l.create_at, '%Y') as loan_year
+                FROM
+                    ms_loans l
+                WHERE 
+                    l.customer_id='$request->customerId'
+                    AND l.loan_id='$request->loanId'
+                    AND l.is_active=1
+            ")[0];
+
+            $customerDetails = DB::select("
+                SELECT
+                    customer_id,
+                    customer_name,
+                    customer_address,
+                    customer_phone,
+                    customer_id_number,
+                    customer_proffesion
+                FROM
+                    customers
+                WHERE
+                    customer_id='$request->customerId'
+                    AND is_active=1
+            ")[0];
+
+            return response()->json([
+                'errNum' => 0,
+                'errStr' => 'Success',
+                'redirect' => 'agreement',
+                'custDetail' => $customerDetails,
+                'loanDetail' => $loanDetail,
+            ]);
+        }
+        else
+        {
+            return response()->json([
+                'errNum' => 1,
+                'errStr' => 'Generate Agreement Letter Failed',
                 'redirect' => 'loan',
                 'custId' => $request->customerId,
                 'errors' => $validator->errors()

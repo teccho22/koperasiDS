@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Transaction;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
-use Session;
+use Illuminate\Support\Facades\DB;
 
 class OutgoingController extends Controller
 {
     //
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         $paginate = 10;
         if ($request->paginate)
         {

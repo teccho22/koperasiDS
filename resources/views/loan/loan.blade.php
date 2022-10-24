@@ -67,6 +67,14 @@
                             <input type="hidden" name="custId" id="editCustomerId" class="form-control" value="{{ $customer->customer_id }}" hidden/>
                             <div class="form-group row required">
                                 <div class="col-sm-4">
+                                    <span for="" class="control-label">Loan Id</span>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="inputLoanId"  name="loanId"  placeholder="Loan Id" style="text-transform:uppercase">
+                                </div>
+                            </div>
+                            <div class="form-group row required">
+                                <div class="col-sm-4">
                                     <span for="" class="control-label">Loan Date</span>
                                 </div>
                                 <div class="col-sm-8">
@@ -378,6 +386,7 @@
                     <td>
                         <button id="payInstallment" type="button" class="btn btn-primary" title="Pay" onclick="showPayLoanModal('{{ $data->loan_id }}', '{{ $data->loan_number}}');">Pay</button>
                         <button id="editLoan" type="button" class="btn btn-primary" title="Edit" onclick="showEditLoanModal({{ $data->loan_id }});"><i class="fa fa-pen"></i> Edit</button>
+                        <button id="agreementBtn" type="button" class="btn btn-primary" title="Agreement" onclick="downloadAgreement({{ $data->loan_id }});" style="text-align: center !important;">Agreement Letter</button>
                     </td>
                 </tr>
                 <tr id="hiddenLoan{{ $loop->index }}" class="hidden_row">
@@ -433,6 +442,12 @@
         <input type="text" name="installmentUnpaid" id="installmentUnpaid" value="">
         <input type="text" name="spNumber" id="spNumber" value="">
         <input type="text" name="installmentPaidDetail" id="installmentPaidDetail" value="">
+        {{ csrf_field() }}
+    </form>
+
+    <form hidden id="agreementForm" method="post" target="agreement">
+        <input type="text" name="customerDetail" id="customerDetails" value="">
+        <input type="text" name="loanDetail" id="loanDetail" value="">
         {{ csrf_field() }}
     </form>
 @stop
@@ -529,9 +544,13 @@
             var loan = $.grep(loanList, function(v) {
                 return v.loan_id == id;
             });
-            console.log(loan);
+            
+            var date = new Date(loan[0]['loan_date']);
+            var timestamp = date.getTime() - date.getTimezoneOffset() * 60000;
+            var loanDate = new Date(timestamp);
 
             $('#editLoanId').val(id);
+            $('#editLoanDate').val(loanDate.toISOString().substr(0, 10));
             $('#editCollateralCategory').val(loan[0]['collateral_category']);
             $('#editCollateralFiles').val(loan[0]['collateral_file_path']);
             $('#editCollateralDescription').val(loan[0]['collateral_description']);
@@ -1132,11 +1151,53 @@
                         console.log($('#spNumber').val());
     
                         var bpForm = document.getElementById("form");
-    
+
+                        // dev
                         bpForm.setAttribute("action","{{ URL::asset('assets/template/sp.php') }}");
-    
-                        exportwindow = window.open('', "sp", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+                        exportwindow = window.open("{{ URL::asset('assets/template/sp.php') }}", "sp", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+
+                        // prod
+                        // bpForm.setAttribute("action","{{ URL::asset('public/assets/template/sp.php') }}");
+                        // exportwindow = window.open("{{ URL::asset('public/assets/template/sp.php') }}", "sp", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+                        
                         bpForm.submit();
+                    }
+                }
+            });
+        }
+        
+        function downloadAgreement(loanId)
+        {
+            $.ajax
+            ({
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                dataType : 'json',
+                type: 'POST',
+                url: "{{ url('/generateAggrementLetter') }}",
+                data: {
+                    loanId : loanId,
+                    customerId : customer.customer_id
+                },
+                success: function(result)
+                {
+                    if (result['errNum'] == 0)
+                    {
+                        var custDetail = JSON.stringify(result['custDetail']);
+                        var loanDetail = JSON.stringify(result['loanDetail']);
+                        $('#customerDetails').val(custDetail);
+                        $('#loanDetail').val(loanDetail);
+    
+                        var agreementForm = document.getElementById("agreementForm");
+
+                        // dev
+                        // agreementForm.setAttribute("action","{{ URL::asset('assets/template/agreement.php') }}");
+                        // exportwindow = window.open("{{ URL::asset('assets/template/agreement.php') }}", "agreement", "resizable=yes,scrollbars=yes,scrollbars=1");
+
+                        // prod
+                        agreementForm.setAttribute("action","{{ URL::asset('public/assets/template/agreement.php') }}");
+                        exportwindow = window.open("{{ URL::asset('public/assets/template/agreement.php') }}", "agreement", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+                        
+                        agreementForm.submit();
                     }
                 }
             });

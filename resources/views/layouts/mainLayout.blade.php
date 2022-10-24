@@ -44,6 +44,7 @@
                         <a href="{{ route('businessGrowth') }}">Business Growth</a>
                     </div>
                 </div>
+                <a href="{{ route('logout') }}" style="color: #f1f1f1 !important; padding: 14px 16px; font-size: 20px; position:fixed; bottom:0;">Logout</a>
             </div>
             <span class="hamburger" onclick="openNav()">&#9776;</span>
             <h3 align="left" style="color: #0877DE;"><a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/Logo.png') }}" alt="KDS Logo" style="margin-right: 20px;"> Koperasi Damai Sejahtera</a></h3><br />
@@ -260,5 +261,9 @@
     hr {
         height: 1px;
         background: #eaeaea;
+    }
+
+    th {
+        vertical-align: middle !important;
     }
 </style>

@@ -46,10 +46,10 @@
                             {{ csrf_field() }}
                             <div class="form-group row required">
                                 <div class="col-sm-4">
-                                    <span for="" class="control-label">Loan Date</span>
+                                    <span for="" class="control-label">Customer Id</span>
                                 </div>
                                 <div class="col-sm-8">
-                                    <input type="date" class="form-control" id="inputLoanDate"  name="loanDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                    <input type="text" class="form-control" id="inputCustomerId"  name="customerId"  placeholder="Customer Id" style="text-transform:uppercase">
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -112,6 +112,22 @@
                             </div>
                             <span for="" class="" style="font-size: 20px; color:#0877DE;"><b>Disbursement</b></span>
                             <div class="divDisbursement">
+                                <div class="form-group row required">
+                                    <div class="col-sm-4">
+                                        <span for="" class="control-label">Loan Id</span>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" id="inputLoanId"  name="loanId"  placeholder="Loan Id" style="text-transform:uppercase">
+                                    </div>
+                                </div>
+                                <div class="form-group row required">
+                                    <div class="col-sm-4">
+                                        <span for="" class="control-label">Loan Date</span>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <input type="date" class="form-control" id="inputLoanDate"  name="loanDate" onkeypress="return dateKeypress(event)" placeholder="dd/mm/yyyy">
+                                    </div>
+                                </div>
                                 <div class="form-group row required">
                                     <div class="col-sm-4">
                                         <span for="" class="control-label">Loan Amount</span>
@@ -340,8 +356,8 @@
                     <td>{{ $data->customer_phone}}</td>
                     <td>{{ $data->customer_agent}}</td>
                     <td>
-                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditModal('{{ $data->customer_id}}')"><i class="fa fa-pen"></i></button>
-                        <a id="viewDetail" type="button" class="btn btn-primary" title="View Detail" href="{{ route('loan', ['id' => $data->customer_id]) }}"><i class="fa fa-eye"></i></a>
+                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditModal('{{ $data->customer_id}}')" style="position: sticky;"><i class="fa fa-pen"></i></button>
+                        <a id="viewDetail" type="button" class="btn btn-primary" title="View Detail" href="{{ route('loan', ['id' => $data->customer_id]) }}" style="position: absolute; margin-left: 5px;"><i class="fa fa-eye"></i></a>
                     </td>
                 </tr>
                 @endforeach
@@ -592,11 +608,11 @@
                             $('#loanAmount').val(loan);
 
                             var installmentAmount = Number($('#installmentAmount').val().replace(/[^0-9.-]+/g,""));
-                            $('#installmentAmount').val(loan);
+                            $('#installmentAmount').val(installmentAmount);
                             var provisionFee = Number($('#provisionFee').val().replace(/[^0-9.-]+/g,""));
-                            $('#provisionFee').val(loan);
+                            $('#provisionFee').val(provisionFee);
                             var disbursementAmount = Number($('#disbursementAmount').val().replace(/[^0-9.-]+/g,""));
-                            $('#disbursementAmount').val(loan);
+                            $('#disbursementAmount').val(disbursementAmount);
 
                             $("<input />").attr("type", "hidden")
                             .attr("name", "loanAmount")

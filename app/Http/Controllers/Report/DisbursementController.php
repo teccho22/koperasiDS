@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Excel;
 use App\Exports\DisbursemetExport;
@@ -15,6 +15,11 @@ class DisbursementController extends Controller
     //
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         $paginate = 10;
         if ($request->paginate)
         {
@@ -89,7 +94,7 @@ class DisbursementController extends Controller
                 ->whereYear('ms_loans.create_at', '=', date('Y'));
             }
 
-            DB::connection()->enableQueryLog();
+            // DB::connection()->enableQueryLog();
 
             $disbursement = $sql
                         ->where('customers.is_active', 1)

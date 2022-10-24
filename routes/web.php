@@ -11,7 +11,7 @@
 */
 
 // use Illuminate\Routing\Route;
-use App\Models\Test;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('login');
@@ -21,6 +21,7 @@ Route::get('/', function () {
 
 // Route::group(['middleware' => ['guest']], function() {
     Route::get('/login', '\App\Http\Controllers\LoginController@index')->name('login');
+    Route::get('/logout', '\App\Http\Controllers\LoginController@logout')->name('logout');
     Route::post('/login/checklogin', '\App\Http\Controllers\LoginController@checklogin')->name('checkLogin');
 
     Route::get('/customer', '\App\Http\Controllers\Customer\CustomerController@index')->name('customer');
@@ -38,6 +39,7 @@ Route::get('/', function () {
     Route::post('/blacklist','\App\Http\Controllers\Loan\LoanController@blacklist');
     Route::post('/unblacklist','\App\Http\Controllers\Loan\LoanController@unblacklist');
     Route::post('/generateSp','\App\Http\Controllers\Loan\LoanController@generateSp');
+    Route::post('/generateAggrementLetter','\App\Http\Controllers\Loan\LoanController@generateAggrementLetter');
 
     // transaction
     Route::get('/incoming', '\App\Http\Controllers\Transaction\IncomingController@index')->name('incoming');
@@ -70,6 +72,4 @@ Route::get('/', function () {
     Route::get('/chart', '\App\Http\Controllers\Report\BussinesGrowthController@chart')->name('chart');
     Route::get('/generateChart', '\App\Http\Controllers\Report\BussinesGrowthController@generateChart')->name('generateChart');
 // });
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
+// Auth::routes();

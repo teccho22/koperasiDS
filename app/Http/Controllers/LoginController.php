@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Validator;
-use Auth;
-use Illuminate\Contracts\Session\Session;
-// use Session;
+use Illuminate\Support\Facades\Auth;
+// use Illuminate\Contracts\Session\Session;
+// use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -29,12 +29,21 @@ class LoginController extends Controller
 
         if(Auth::attempt($user_data))
         {
-            session()->put('user', $request->get('username'));
+            $request->session()->put('username', $request->get('username'));
+            
             return redirect('/customer');
         }
         else
         {
             return back()->with('error', 'Wrong Login Details');
         }
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
     }
 }

@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class BussinesGrowthController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         // DB::connection()->enableQueryLog();
         $result = DB::select("
             SELECT

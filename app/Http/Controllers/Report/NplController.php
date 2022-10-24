@@ -5,13 +5,19 @@ namespace App\Http\Controllers\Report;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Exports\NplExport;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Excel;
 
 class NplController extends Controller
 {
     //
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+        
         // DB::connection()->enableQueryLog();
         $paginate = 10;
         if ($request->paginate)
@@ -98,7 +104,7 @@ class NplController extends Controller
                 ->whereYear('ms_loans.create_at', '=', date('Y'));
             }
 
-            DB::connection()->enableQueryLog();
+            // DB::connection()->enableQueryLog();
 
             $npl = $sql
                         ->where('customers.is_active', 1)
@@ -126,7 +132,7 @@ class NplController extends Controller
                         )
                         ->paginate($paginate);
             
-            $queries = DB::getQueryLog();;
+            // $queries = DB::getQueryLog();;
 
             $agentList = DB::table('customers')
                 ->select('customer_agent')

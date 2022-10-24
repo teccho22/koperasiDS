@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Customer;
 
 use Illuminate\Http\Request;
+use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Customer;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Auth;
 
@@ -15,10 +16,16 @@ class CustomerController extends Controller
     public function __construct(Request $request)
     {
         // dd(Auth::check() );
+        // $this->middleware('auth');
     }
 
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+        
         $paginate = 10;
         if ($request->paginate)
         {
@@ -68,7 +75,9 @@ class CustomerController extends Controller
             'installmentAmount'     => 'required',
             'provisionFee'          => 'required',
             'disbursementAmount'    => 'required',
-            'collateralFiles'       => 'mimetypes:image/jpeg,application/pdf,image/png'
+            'collateralFiles'       => 'mimetypes:image/jpeg,application/pdf,image/png',
+            'loanId'                => 'required',
+            'customerId'                => 'required'
         ];
 
         if ($this->validate($request, $rules))
@@ -100,7 +109,7 @@ class CustomerController extends Controller
             
             $customer = DB::table('customers')->insert(
                 [
-                    'customer_id' => strtoupper($custId),
+                    'customer_id' => strtoupper($request->customerId),
                     'customer_name' => $request->customerName,
                     'customer_id_number' => $request->customerKtp,
                     'customer_address' => $request->customerAddress,
@@ -153,25 +162,15 @@ class CustomerController extends Controller
                     FROM 
                         ms_loans 
                     WHERE 
-                        customer_id = '$custId'
+                        customer_id = 'strtoupper($request->customerId)'
                         and is_active=1    
                     "
                 );
 
-                $loanNumber = ''; 
-                if ($results[0]->loan_number == null)
-                {
-                    $loanNumber = 'L00001';
-                }
-                else{
-                    // $results[0]->max_id
-                    $loanNumber = 'L' . str_pad((int)Str::substr($results[0]->loan_number,1)+1, 5, '0', STR_PAD_LEFT);
-                }
-
                 $loan = DB::table('ms_loans')->insertGetId(
                     [
-                        'customer_id' => $custId,
-                        'loan_number' => $loanNumber,
+                        'customer_id' => strtoupper($request->customerId),
+                        'loan_number' => strtoupper($request->loanId),
                         'loan_amount' => $request->loanAmount,
                         'interest_rate' => $request->interestRate,
                         'provision_fee' => $request->provisionFee,
@@ -198,6 +197,7 @@ class CustomerController extends Controller
                         'loan_id'           => $loan,
                         'outgoing_category' => 'New Loan',
                         'outgoing_date'     => date('Y-m-d H:i:s'),
+                        'outgoing_date'     => date('Y-m-d H:i:s', strtotime($request->loanDate)),
                         'outgoing_amount'   => $request->loanAmount,
                         'update_at' => date('Y-m-d H:i:s'),
                         'create_at' => date('Y-m-d H:i:s'),
@@ -246,7 +246,7 @@ class CustomerController extends Controller
                     // 3 : Paid
                     // 4 : Overdue
                     $tenor = $request->tenor;
-                    $date = date('Y-m-d');
+                    $date = date('Y-m-d', strtotime($request->loanDate));
                     for ($i=0; $i < $tenor; $i++) { 
                         $date = date("Y-m-d", strtotime( $date . "+1 month"));
                         $incoming = DB::table('ms_incomings')->insertGetId(

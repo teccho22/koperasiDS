@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Response;
 
 class TransactionController extends Controller
@@ -12,6 +12,11 @@ class TransactionController extends Controller
     //
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         $paginate = 10;
         if ($request->paginate)
         {
@@ -36,13 +41,15 @@ class TransactionController extends Controller
                         'trx_account_mgmt.trx_category',
                         'trx_account_mgmt.trx_amount',
                         'trx_account_mgmt.cash_account',
-                        'trx_account_mgmt.bank_account'
+                        'trx_account_mgmt.bank_account',
+                        'ms_incomings.incoming_category',
+                        'ms_outgoings.outgoing_category'
                     )
                     ->orderBy('trx_account_mgmt.id', 'desc')
                     ->paginate($paginate);
         
         // $queries = DB::getQueryLog();
-        // dd($queries);
+        // dd($transaction);
 
         return view('transaction/transaction', [
             'transaction' => $transaction,

@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Transaction;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class IncomingController extends Controller
 {
     //
     function index(Request $request)
     {
+        if ($request->session()->get('username') == null)
+        {
+            return redirect()->intended('/');
+        }
+
         $paginate = 10;
         if ($request->paginate)
         {
@@ -174,7 +179,7 @@ class IncomingController extends Controller
 
     function searchIncoming(Request $request)
     {
-        DB::connection()->enableQueryLog();
+        // DB::connection()->enableQueryLog();
         $paginate = 10;
         if ($request->paginate)
         {
