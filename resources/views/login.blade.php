@@ -13,6 +13,24 @@
             <div class="card p-3 mb-5 bg-white rounded" style="width: 40% !important; margin-left: auto;margin-right:auto; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important">
                 <div class="card-body">
                     <h3 align="center" style="color: #0877DE;font-family: 'Righteous', cursive !important;">Login</h3><br />
+                    
+                    @if ($message = Session::get('error'))
+                        <div class="alert alert-danger alert-block">
+                            <button type="button" class="close" data-dismiss="alert">×</button>
+                            <strong>{{ $message }}</strong>
+                        </div>
+                    @endif
+                
+                    @if (count($errors) > 0)
+                        <div class="alert alert-danger">
+                            <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                
                     <form method="post" action="{{ url('/login/checklogin') }}" style="font-family: 'Roboto', cursive !important; color:black">
                         {{ csrf_field() }}
                         <div class="form-group">
@@ -25,15 +43,6 @@
                             <input type="submit" name="login" class="btn btn-primary" value="Login" style="width: 100%" />
                         </div>
                     </form>
-                    @if (count($errors) > 0)
-                        <div style="font-family: 'Roboto', cursive !important; font-size: 15px; color: red;">
-                            <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                            </ul>
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
