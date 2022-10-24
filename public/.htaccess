@@ -1,21 +1,45 @@
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+RewriteEngine On
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
     RewriteEngine On
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    #RewriteEngine On
+    #RewriteCond %{REQUEST_FILENAME} !-f
+    #RewriteCond %{REQUEST_FILENAME} !-d
+    #RewriteRule ^(.*)$ /index.php?/$1 [L]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
 
-    # Handle Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
-</IfModule>
+
+    #RewriteCond %{THE_REQUEST} ^.*/index\.php
+    #RewriteRule ^(.*)index.php$ /$1 [R=301,L]
+    ##Redirect 301 /index.php https://www.example.net/
+    #RewriteEngine On
+    #RewriteCond %{HTTP:X-Forwarded-Proto} !https [OR]
+    #RewriteCond %{HTTP_HOST} !^www. [NC]
+    #RewriteRule ^(.*)$ https://www.example.net/$1 [L,R=301]
+
+
+    <IfModule mod_rewrite.c>
+        <IfModule mod_negotiation.c>
+            Options -MultiViews
+        </IfModule>
+
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^api/(.*)?$ http://127.0.0.1:8888/$1 [P,L]
+        # Redirect Trailing Slashes If Not A Folder...
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+        # Handle Front Controller...
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^ index.php [L]
+
+        # Handle Authorization Header
+        RewriteCond %{HTTP:Authorization} .
+        RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    </IfModule>
