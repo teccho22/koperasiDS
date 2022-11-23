@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Validator;
 
 // loan status
 // 1 : Haven't due yet
-// 2 : Due 
+// 2 : Due
 // 3 : Paid
 // 4 : Overdue
 // 5 : Not Fully Paid
@@ -108,7 +108,7 @@ class LoanController extends Controller
                     }
 
                     $loanDpd = DB::select("
-                        SELECT 
+                        SELECT
                             min(loan_due_date),
                             DATEDIFF(DATE_FORMAT(NOW(),'%Y-%m-%d'), DATE_FORMAT(loan_due_date,'%Y-%m-%d')) dpd
                         FROM
@@ -155,15 +155,15 @@ class LoanController extends Controller
                 }
             }
             $ids= implode(',', $loanIds);
-            
+
             $checkDue = DB::statement("
-                update ms_incomings 
-                set 
+                update ms_incomings
+                set
                     loan_status = 'Due'
-                    , update_at = NOW() 
-                where  
-                    is_active=1 
-                    AND incoming_category = 'Installment' 
+                    , update_at = NOW()
+                where
+                    is_active=1
+                    AND incoming_category = 'Installment'
                     AND loan_id IN ($ids) AND DATE_FORMAT(NOW(),'%Y-%m-%d') BETWEEN DATE_FORMAT(loan_due_date,'%Y-%m-%d') AND DATE_FORMAT(DATE_ADD(loan_due_date, INTERVAL 7 DAY),'%Y-%m-%d')
             ");
 
@@ -263,7 +263,7 @@ class LoanController extends Controller
                     AND customer_collect = 5
                     AND is_active = 1
             ");
-                                                    
+
             $incoming = DB::table('ms_incomings')->whereIn('loan_id', $loanIds)
                                                 ->where('is_active', 1)
                                                 ->get();
@@ -323,7 +323,7 @@ class LoanController extends Controller
             $filePath = '';
             $extendsion = '';
             if ($file)
-            {    
+            {
                 if ($file->getMimeType() == 'image/jpeg')
                 {
                     $extendsion = 'jpeg';
@@ -337,7 +337,7 @@ class LoanController extends Controller
                     $extendsion = 'pdf';
                 }
                 else{
-                    return redirect()->route('customer')->with(['error' => 'File must be png, pdf or jpeg']); 
+                    return redirect()->route('customer')->with(['error' => 'File must be png, pdf or jpeg']);
                 }
 
                 $fileFolder = 'collateral_file';
@@ -348,17 +348,17 @@ class LoanController extends Controller
             }
 
             $results = DB::select("
-                SELECT 
-                    max(loan_number) as loan_number                      
-                FROM 
-                    ms_loans 
-                WHERE 
+                SELECT
+                    max(loan_number) as loan_number
+                FROM
+                    ms_loans
+                WHERE
                     customer_id = '$request->custId'
-                    and is_active=1    
+                    and is_active=1
                 "
             );
 
-            $loanNumber = ''; 
+            $loanNumber = '';
             if ($results[0]->loan_number == null)
             {
                 $loanNumber = 'L00001';
@@ -391,7 +391,7 @@ class LoanController extends Controller
                     'update_by' => 3
                 ]
             );
-        
+
             if ($loan)
             {
                 $outgoing = DB::table('ms_outgoings')->insertGetId([
@@ -407,12 +407,12 @@ class LoanController extends Controller
                 ]);
 
                 $cashAccount = DB::select("
-                    SELECT 
+                    SELECT
                         cash_account,
-                        bank_account                    
-                    FROM 
-                        trx_account_mgmt 
-                    WHERE 
+                        bank_account
+                    FROM
+                        trx_account_mgmt
+                    WHERE
                         id = (SELECT max(id) from trx_account_mgmt where is_active=1)
                         and is_active=1
                 ");
@@ -440,12 +440,12 @@ class LoanController extends Controller
                     'create_by'         => 3,
                     'update_by'         => 3
                 ]);
-                
+
                 $tenor = $request->tenor;
                 $date = date('Y-m-d', strtotime($request->loanDate));
-                for ($i=0; $i < $tenor; $i++) { 
+                for ($i=0; $i < $tenor; $i++) {
                     $date = date("Y-m-d", strtotime( $date . "+1 month"));
-                    
+
                     $incoming = DB::table('ms_incomings')->insertGetId(
                         [
                             'loan_id' => $loan,
@@ -463,7 +463,7 @@ class LoanController extends Controller
                     if (!$incoming)
                     {
                         DB::rollback();
-                        return redirect()->route('loan', [$request->custId])->with(['error' => 'Input Data Failed!!']); 
+                        return redirect()->route('loan', [$request->custId])->with(['error' => 'Input Data Failed!!']);
                         break;
                     }
                 };
@@ -474,7 +474,7 @@ class LoanController extends Controller
             else
             {
                 DB::rollback();
-                return redirect()->route('loan', [$request->custId])->with(['error' => 'Input Data Failed!!']); 
+                return redirect()->route('loan', [$request->custId])->with(['error' => 'Input Data Failed!!']);
             }
         }
     }
@@ -490,7 +490,7 @@ class LoanController extends Controller
         $filePath = '';
         $extendsion = '';
         if ($file)
-        {    
+        {
             if ($file->getMimeType() == 'image/jpeg')
             {
                 $extendsion = 'jpeg';
@@ -504,7 +504,7 @@ class LoanController extends Controller
                 $extendsion = 'pdf';
             }
             else{
-                return redirect()->route('customer')->withErrors(['files' => 'File must be png, pdf or jpeg']); 
+                return redirect()->route('customer')->withErrors(['files' => 'File must be png, pdf or jpeg']);
             }
 
             $fileFolder = 'collateral_file';
@@ -524,7 +524,7 @@ class LoanController extends Controller
                             'collateral_file_path'=>$filePath,
                             'collateral_description'=>$request->editCollateralDescription]);
 
-        
+
 
         if ($result == 0)
         {
@@ -536,25 +536,25 @@ class LoanController extends Controller
                     ->update(['outgoing_date' => date('Y-m-d H:i:s', strtotime($request->editLoanDate))]);
 
                 $incomings = DB::select("
-                    SELECT 
-                        incoming_id       
-                    FROM 
-                        ms_incomings 
-                    WHERE 
+                    SELECT
+                        incoming_id
+                    FROM
+                        ms_incomings
+                    WHERE
                         loan_id = $request->loanId
                         and incoming_category = 'Installment'
                         and is_active=1
                 ");
 
                 $date = date('Y-m-d', strtotime($request->editLoanDate));
-                for ($i=0; $i < sizeof($incomings); $i++) { 
+                for ($i=0; $i < sizeof($incomings); $i++) {
                     $date = date("Y-m-d", strtotime( $date . "+1 month"));
-                    
+
                     DB::table('ms_incomings')
                         ->where('incoming_id', $incomings[$i]->incoming_id)
                         ->where('is_active',1)
                         ->update(['loan_due_date' => date('Y-m-d H:i:s', strtotime($date))]);
-                    
+
                 };
 
                 DB::commit();
@@ -608,7 +608,7 @@ class LoanController extends Controller
             ");
 
             $installment = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
-            $outstanding = floatval($request->payAmount - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0));
+            $outstanding = floatval(floatval($request->payAmount) - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0));
             $incomingId = $installmentAmount[0]->incoming_id;
 
             if(intval($outstanding) < 0)
@@ -682,7 +682,7 @@ class LoanController extends Controller
                     $pay = 0;
                     $incomingIds = '';
                     // dd($outstanding);
-                    
+
                     if ($outstanding < 0)
                     {
                         break;
@@ -690,7 +690,7 @@ class LoanController extends Controller
                     else if ($outstanding - $installment > 0)
                     {
                         if ($j == ($countIncoming-1))
-                        {  
+                        {
                             $pay = $outstanding;
                             $status = 'Paid';
                         }
@@ -723,7 +723,7 @@ class LoanController extends Controller
                     if ($status != '' && $pay != 0)
                     {
                         $incomingIds = $incoming[$j]->incoming_id;
-                        
+
                         DB::statement("
                             update ms_incomings
                             set
@@ -738,14 +738,14 @@ class LoanController extends Controller
                         ");
 
                         $cashAccount = DB::select("
-                            SELECT 
+                            SELECT
                                 cash_account,
-                                bank_account                     
-                            FROM 
-                                trx_account_mgmt 
-                            WHERE 
+                                bank_account
+                            FROM
+                                trx_account_mgmt
+                            WHERE
                                 id = (SELECT max(id) from trx_account_mgmt where is_active=1)
-                                and is_active=1    
+                                and is_active=1
                         ");
 
                         $incomingStatus = DB::select("
@@ -761,7 +761,7 @@ class LoanController extends Controller
                         ");
 
                         $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
-                        
+
                         $transaction = DB::table('trx_account_mgmt')->insert([
                             'trx_category'      => 'Incoming',
                             'trx_amount'        => $incomingStatus[0]->incoming_amount,
@@ -779,14 +779,14 @@ class LoanController extends Controller
             }
 
             $cashAccount = DB::select("
-                SELECT 
+                SELECT
                     cash_account,
-                    bank_account                     
-                FROM 
-                    trx_account_mgmt 
-                WHERE 
+                    bank_account
+                FROM
+                    trx_account_mgmt
+                WHERE
                     id = (SELECT max(id) from trx_account_mgmt where is_active=1)
-                    and is_active=1    
+                    and is_active=1
             ");
 
             $incomingStatus = DB::select("
@@ -802,7 +802,7 @@ class LoanController extends Controller
             ");
 
             $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
-            
+
             $transaction = DB::table('trx_account_mgmt')->insert([
                 'trx_category'      => 'Incoming',
                 'trx_amount'        => $incomingStatus[0]->incoming_amount,
@@ -861,7 +861,7 @@ class LoanController extends Controller
                     DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%d-%b-%Y") as loan_date')
                 )
                 ->paginate(10);
-                                        
+
         $loanIds = [];
         foreach($loanList as $loan)
         {
@@ -904,7 +904,7 @@ class LoanController extends Controller
                             'is_blacklist' => 1,
                             'updated_at' => date('Y-m-d H:i:s')
                         ]);
-            
+
             if($blacklist)
             {
                 return response()->json([
@@ -940,7 +940,7 @@ class LoanController extends Controller
                             'is_blacklist' => 0,
                             'updated_at' => date('Y-m-d H:i:s')
                         ]);
-            
+
             if($blacklist)
             {
                 return response()->json([
@@ -977,7 +977,7 @@ class LoanController extends Controller
                     max(l.loan_collect)
                 FROM
                     ms_loans l
-                WHERE 
+                WHERE
                     l.customer_id='$request->customerId'
                     AND l.is_active=1
                 GROUP BY
@@ -1005,7 +1005,7 @@ class LoanController extends Controller
                     AND l.is_active=1
                     AND l.loan_id='$loanDetail->loan_id'
             ")[0];
-            
+
 
             // get installment
             if ($limit > 3)
@@ -1135,7 +1135,7 @@ class LoanController extends Controller
                     DATE_FORMAT(l.create_at, '%Y') as loan_year
                 FROM
                     ms_loans l
-                WHERE 
+                WHERE
                     l.customer_id='$request->customerId'
                     AND l.loan_id='$request->loanId'
                     AND l.is_active=1
@@ -1173,6 +1173,60 @@ class LoanController extends Controller
                 'custId' => $request->customerId,
                 'errors' => $validator->errors()
             ]);
+        }
+    }
+
+    function deleteLoan(Request $request)
+    {
+        if ($request->id)
+        {
+            $incomingIds = DB::table('ms_incomings')
+                            ->select('incoming_id')
+                            ->where('is_active', 1)
+                            ->where('loan_id', $request->id)
+                            ->get()->pluck('incoming_id')->all();
+
+            $outgoingIds = DB::table('ms_outgoings')
+                            ->select('outgoing_id')
+                            ->where('is_active', 1)
+                            ->where('loan_id', $request->id)
+                            ->get()->pluck('outgoing_id')->all();
+
+            DB::table('trx_account_mgmt')
+            ->whereIn('incoming_id', $incomingIds)
+            ->orWhereIn('outgoing_id', $outgoingIds)
+            ->where('is_active', 1)
+            ->update([
+                    'is_active' => 0
+            ]);
+
+            DB::table('ms_incomings')
+            ->where('loan_id', $request->id)
+            ->where('is_active', 1)
+            ->update([
+                    'is_active' => 0
+            ]);
+
+            DB::table('ms_outgoings')
+            ->where('loan_id', $request->id)
+            ->where('is_active', 1)
+            ->update([
+                    'is_active' => 0
+            ]);
+
+            DB::table('ms_loans')
+            ->where('loan_id', $request->id)
+            ->where('is_active', 1)
+            ->update([
+                    'is_active' => 0
+            ]);
+
+            DB::commit();
+            return redirect()->route('loan',[$request->custId])->with(['success' => 'Data Berhasil Dihapus!']);
+        }
+        else
+        {
+            return redirect()->route('loan',[$request->custId])->with(['failed' => 'Data gagal Dihapus!']);
         }
     }
 }

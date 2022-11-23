@@ -28,6 +28,7 @@ Route::get('/', function () {
     Route::post('/customer/addCustomer', '\App\Http\Controllers\Customer\CustomerController@addCustomer');
     Route::post('/customer/editCustomer', '\App\Http\Controllers\Customer\CustomerController@editCustomer');
     Route::post('/customer/getEditData', '\App\Http\Controllers\Customer\CustomerController@getEditData');
+    Route::get('/customer/deleteCustomer', '\App\Http\Controllers\Customer\CustomerController@deleteCustomer')->name('deleteCustomer');
     Route::post('/searchCustomer', '\App\Http\Controllers\Customer\CustomerController@searchCustomer');
     Route::post('/customer/paginate', '\App\Http\Controllers\Customer\CustomerController@paginate');
 
@@ -36,6 +37,7 @@ Route::get('/', function () {
     Route::post('/editLoan', '\App\Http\Controllers\Loan\LoanController@editLoan');
     Route::post('/payLoan', '\App\Http\Controllers\Loan\LoanController@payLoan');
     Route::post('/searchByLoanId','\App\Http\Controllers\Loan\LoanController@searchByLoanId');
+    Route::get('/deleteLoan','\App\Http\Controllers\Loan\LoanController@deleteLoan')->name('deleteLoan');
     Route::post('/blacklist','\App\Http\Controllers\Loan\LoanController@blacklist');
     Route::post('/unblacklist','\App\Http\Controllers\Loan\LoanController@unblacklist');
     Route::post('/generateSp','\App\Http\Controllers\Loan\LoanController@generateSp');

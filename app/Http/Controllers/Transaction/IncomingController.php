@@ -59,14 +59,14 @@ class IncomingController extends Controller
             );
 
             $cashAccount = DB::select("
-                SELECT 
+                SELECT
                     cash_account,
-                    bank_account                     
-                FROM 
-                    trx_account_mgmt 
-                WHERE 
+                    bank_account
+                FROM
+                    trx_account_mgmt
+                WHERE
                     id = (SELECT max(id) from trx_account_mgmt where is_active=1)
-                    and is_active=1    
+                    and is_active=1
             ");
             if (sizeof($cashAccount) > 0)
             {
@@ -78,7 +78,7 @@ class IncomingController extends Controller
                 $total=$request->amount;
                 $bank_account = 0;
             }
-                
+
             $transaction = DB::table('trx_account_mgmt')->insert([
                 'trx_category'      => 'Incoming',
                 'trx_amount'        => $request->amount,
@@ -143,7 +143,6 @@ class IncomingController extends Controller
 
     function deleteIncoming(Request $request)
     {
-
         if ($request->incomingId)
         {
             $incoming = DB::table('ms_incomings')
@@ -174,7 +173,6 @@ class IncomingController extends Controller
                 'errStr' => 'Delete Failed'
             ]);
         }
-
     }
 
     function searchIncoming(Request $request)

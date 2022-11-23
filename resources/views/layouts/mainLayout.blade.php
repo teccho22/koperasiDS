@@ -5,8 +5,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/fontawesome.min.css" />  
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/fontawesome.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />
     <script type="text/javascript" src="{{ URL::asset('js/custom.js') }}"></script>
     {{-- <script type="text/javascript" src="{{ URL::asset('js/freescript.js') }}"></script> --}}
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
@@ -16,14 +16,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
     <script type="text/javascript" src="{{ URL::asset('js/moment.min.js') }}"></script>
     <link href="{{ URL::asset('css/jquery.datetimepicker.css') }}" rel="stylesheet">
-    <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>  
+    <script src="{{ URL::asset('js/jquery.datetimepicker.js') }}"></script>
     <script type="text/javascript" charset="utf-8" src="https://www.zoonman.com/projects/combobox/combobox.js"></script>
     <link rel="icon" href="{{ URL::asset('assets/images/Logo.png') }}">
     <head>
         <title>@yield('title')</title>
         <meta name="csrf-token" content="{{ csrf_token() }}">
     </head>
-    <body> 
+    <body>
         <div class="header">
             <div id="mySidenav" class="sidenav">
                 <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -101,7 +101,7 @@
 
     .content {
         min-height: 700px;
-        width: 90%;
+        width: 100%;
         margin: auto;
         margin-bottom: 0;
     }
