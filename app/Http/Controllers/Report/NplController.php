@@ -17,7 +17,7 @@ class NplController extends Controller
         {
             return redirect()->intended('/');
         }
-        
+
         // DB::connection()->enableQueryLog();
         $paginate = 10;
         if ($request->paginate)
@@ -34,11 +34,16 @@ class NplController extends Controller
         $npl = DB::table('ms_loans')
                     ->join('customers','ms_loans.customer_id', '=', 'customers.customer_id')
                     ->join('ms_outgoings','ms_loans.loan_id', '=', 'ms_outgoings.loan_id')
+                    ->leftJoin(
+                        DB::raw("
+                            (select ms_incomings.loan_id, COUNT(ms_incomings.loan_id) countOD from ms_incomings where ms_incomings.loan_status = 'Overdue' GROUP BY ms_incomings.loan_id) as a
+                        "), 'a.loan_id', '=', 'ms_loans.loan_id'
+                    )
                     ->where('customers.is_active', 1)
                     ->where('ms_loans.is_active', 1)
-                    ->where('ms_loans.loan_collect', '>=', 3)
-                    ->whereMonth('ms_loans.create_at', '=', date('m'))
-                    ->whereYear('ms_loans.create_at', '=', date('Y'))
+                    ->where('a.countOD', '>=', 2)
+                    ->whereMonth('ms_loans.create_at', '<=', date('m'))
+                    ->whereYear('ms_loans.create_at', '<=', date('Y'))
                     ->select( 'ms_loans.customer_id',
                             'customers.customer_name',
                             'ms_loans.loan_number',
@@ -48,20 +53,14 @@ class NplController extends Controller
                             'ms_loans.tenor',
                             DB::raw('IFNULL(ms_loans.loan_amount - (
                                 SELECT SUM(incoming_amount)
-                                 FROM ms_incomings 
-                                 WHERE loan_status in ("Paid","Not Fully Paid")
-                                and ms_incomings.loan_id = ms_loans.loan_id
-                            ), ms_loans.loan_amount) AS outstanding'),
-                            DB::raw('IFNULL(ms_loans.loan_amount - (
-                                SELECT SUM(incoming_amount)
                                  FROM ms_incomings
                                  WHERE loan_status in ("Paid","Not Fully Paid")
                                 and ms_incomings.loan_id = ms_loans.loan_id
                              ), ms_loans.loan_amount) AS npl_at')
-                    )
+                    )->distinct()
                     // ->orderBy('trx_account_mgmt.id', 'desc')
                     ->paginate($paginate);
-        
+
         // $queries = DB::getQueryLog();;
         // dd($queries);
 
@@ -74,7 +73,7 @@ class NplController extends Controller
 
     function searchNpl(Request $request)
     {
-        if($request->type == 'Display') 
+        if($request->type == 'Display')
         {
             $paginate = 10;
             if ($request->paginate)
@@ -84,7 +83,12 @@ class NplController extends Controller
 
             $sql = DB::table('ms_loans')
                 ->join('customers','ms_loans.customer_id', '=', 'customers.customer_id')
-                ->join('ms_outgoings','ms_loans.loan_id', '=', 'ms_outgoings.loan_id');
+                ->join('ms_outgoings','ms_loans.loan_id', '=', 'ms_outgoings.loan_id')
+                ->leftJoin(
+                    DB::raw("
+                        (select ms_incomings.loan_id, COUNT(ms_incomings.loan_id) countOD from ms_incomings where ms_incomings.loan_status = 'Overdue' GROUP BY ms_incomings.loan_id) as a
+                    "), 'a.loan_id', '=', 'ms_loans.loan_id'
+                );
 
             if ($request->searchAgent)
             {
@@ -92,25 +96,18 @@ class NplController extends Controller
             }
             if ($request->searchDateFrom)
             {
-                $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') >= ?", date($request->searchDateFrom));
+                $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') <= ?", date($request->searchDateFrom));
             }
-            if ($request->searchDateTo)
-            {
-                $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') <= ?", date($request->searchDateTo));
-            }
-            if (!$request->searchDateFrom && !$request->searchDateTo)
+            if (!$request->searchDateFrom)
             {
                 $sql->whereMonth('ms_loans.create_at', '=', date('m'))
                 ->whereYear('ms_loans.create_at', '=', date('Y'));
             }
 
-            // DB::connection()->enableQueryLog();
-
-            $npl = $sql
-                        ->where('customers.is_active', 1)
+            $npl = $sql->where('customers.is_active', 1)
                         ->where('ms_loans.is_active', 1)
-                        ->where('ms_loans.loan_collect', '>=', 3)
-                        ->select( 'ms_loans.customer_id',
+                        ->where('a.countOD', '>=', 2)
+                        ->select('ms_loans.customer_id',
                                 'customers.customer_name',
                                 'ms_loans.loan_number',
                                 'ms_loans.loan_amount',
@@ -119,20 +116,12 @@ class NplController extends Controller
                                 'ms_loans.tenor',
                                 DB::raw('IFNULL(ms_loans.loan_amount - (
                                     SELECT SUM(incoming_amount)
-                                    FROM ms_incomings 
-                                    WHERE loan_status in ("Paid","Not Fully Paid")
-                                    and ms_incomings.loan_id = ms_loans.loan_id
-                                ), ms_loans.loan_amount) AS outstanding'),
-                                DB::raw('IFNULL(ms_loans.loan_amount - (
-                                    SELECT SUM(incoming_amount)
                                     FROM ms_incomings
                                     WHERE loan_status in ("Paid","Not Fully Paid")
                                     and ms_incomings.loan_id = ms_loans.loan_id
                                 ), ms_loans.loan_amount) AS npl_at')
                         )
                         ->paginate($paginate);
-            
-            // $queries = DB::getQueryLog();;
 
             $agentList = DB::table('customers')
                 ->select('customer_agent')
@@ -156,7 +145,7 @@ class NplController extends Controller
     function generateNplExcel(Request $request)
     {
         $fileName = '';
-        
+
         if (!$request->searchDateFrom && !$request->searchDateTo)
         {
             $fileName = 'NplExcel_' . date('m') .'-'.date('Y').'_'.date('d-m-Y H:i:s').'.xlsx';
@@ -167,7 +156,7 @@ class NplController extends Controller
         }
         else
         {
-            $fileName = 'NplExcel_' . date($request->searchDateTo).date($request->searchDateFrom).'_'.date('d-m-Y H:i:s').'.xlsx';   
+            $fileName = 'NplExcel_' . date($request->searchDateTo).date($request->searchDateFrom).'_'.date('d-m-Y H:i:s').'.xlsx';
         }
 
         return Excel::download(new NplExport($request->searchAgent, $request->searchDateFrom, $request->searchDateTo), $fileName);

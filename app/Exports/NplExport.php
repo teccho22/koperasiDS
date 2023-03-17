@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use DB;
 
-class NplExport implements FromCollection
+class NplExport implements FromCollection, WithHeadings, ShouldAutoSize, WithEvents
 {
     /**
     * @return \Illuminate\Support\Collection
@@ -31,20 +31,20 @@ class NplExport implements FromCollection
         $sql = DB::table('ms_loans')
                 ->join('customers','ms_loans.customer_id', '=', 'customers.customer_id')
                 ->join('ms_outgoings','ms_loans.loan_id', '=', 'ms_outgoings.loan_id');
-        
-        if ($this->searchAgent)
+
+        if ($this->agent)
         {
-            $sql->where("customers.customer_agent","=",$this->searchAgent);
+            $sql->where("customers.customer_agent","=",$this->agent);
         }
-        if ($this->searchDateFrom)
+        if ($this->dateFrom)
         {
-            $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') >= ?", date($this->searchDateFrom));
+            $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') >= ?", date($this->dateFrom));
         }
-        if ($this->searchDateTo)
+        if ($this->dateTo)
         {
-            $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') <= ?", date($this->searchDateTo));
+            $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') <= ?", date($this->dateTo));
         }
-        if (!$this->searchDateFrom && !$this->searchDateTo)
+        if (!$this->dateFrom && !$this->dateTo)
         {
             $sql->whereMonth('ms_loans.create_at', '=', date('m'))
             ->whereYear('ms_loans.create_at', '=', date('Y'));
@@ -54,6 +54,7 @@ class NplExport implements FromCollection
             ->where('customers.is_active', 1)
             ->where('ms_loans.is_active', 1)
             ->where('ms_loans.loan_collect', '>=', 3)
+            ->where(DB::raw('(select count(1) from ms_incomings where loan_status = "Overdue" and ms_incomings.loan_id = ms_loans.loan_id) > 3'))
             ->select('ms_loans.customer_id',
                     'customers.customer_name',
                     'ms_loans.loan_number',
@@ -63,7 +64,7 @@ class NplExport implements FromCollection
                     'ms_loans.tenor',
                     DB::raw('IFNULL(ms_loans.loan_amount - (
                         SELECT SUM(incoming_amount)
-                        FROM ms_incomings 
+                        FROM ms_incomings
                         WHERE loan_status in ("Paid","Not Fully Paid")
                         and ms_incomings.loan_id = ms_loans.loan_id
                     ), ms_loans.loan_amount) AS outstanding'),
@@ -82,14 +83,14 @@ class NplExport implements FromCollection
 
     public function headings(): array
     {
-        return ["Customer Id", "Customer Name", "Loan Amount", "Installment Amount", "Outgoing Date", "Tenor", "Outsanding", "NPL at"];
+        return ["Customer Id", "Customer Name", "Loan Id", "Loan Amount", "Installment Amount", "Outgoing Date", "Tenor", "Outsanding", "NPL at"];
     }
 
     public function registerEvents(): array
     {
         return [
             AfterSheet::class    => function(AfterSheet $event) {
-                $cellRange = 'A1:H1'; // All headers
+                $cellRange = 'A1:I1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12)->setBold(true);
 
                 $styleArray = [
@@ -101,7 +102,7 @@ class NplExport implements FromCollection
                     ]
                 ];
 
-                $cellRange = 'A1:H' .(string)($this->totalRow +1); // All headers
+                $cellRange = 'A1:I' .(string)($this->totalRow +1); // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray($styleArray);
             },
         ];

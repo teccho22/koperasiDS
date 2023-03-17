@@ -409,37 +409,27 @@ class CustomerController extends Controller
             ->whereIn('incoming_id', $incomingIds)
             ->orWhereIn('outgoing_id', $outgoingIds)
             ->where('is_active', 1)
-            ->update([
-                    'is_active' => 0
-            ]);
+            ->delete();
 
             DB::table('ms_incomings')
             ->whereIn('loan_id', $loanIds)
             ->where('is_active', 1)
-            ->update([
-                    'is_active' => 0
-            ]);
+            ->delete();
 
             DB::table('ms_outgoings')
             ->whereIn('loan_id', $loanIds)
             ->where('is_active', 1)
-            ->update([
-                    'is_active' => 0
-            ]);
+            ->delete();
 
             DB::table('ms_loans')
             ->where('customer_id', $request->id)
             ->where('is_active', 1)
-            ->update([
-                    'is_active' => 0
-            ]);
+            ->delete();
 
             DB::table('customers')
             ->where('customer_id', $request->id)
             ->where('is_active', 1)
-            ->update([
-                    'is_active' => 0
-            ]);
+            ->delete();
 
             DB::commit();
             return redirect()->route('customer')->with(['success' => 'Data Berhasil Dihapus!']);

@@ -1,7 +1,7 @@
 @extends('layouts.mainLayout')
- 
+
 @section('title', 'NPL')
- 
+
 @section('sidebar')
 @stop
 
@@ -46,12 +46,6 @@
                         <div class="col-sm-3">
                             <input type="month" class="form-control" id="searchDateFrom"  name="searchDateFrom" onkeypress="return dateKeypress(event)" placeholder="mm-yyyy" pattern="\d{2}-\d{4}">
                         </div>
-                        <div class="col-sm-1">
-                            <span for="" class="control-label">To</span>
-                        </div>
-                        <div class="col-sm-3">
-                            <input type="month" class="form-control" id="searchDateTo"  name="searchDateTo" onkeypress="return dateKeypress(event)" placeholder="mm-yyyy" pattern="\d{2}-\d{4}">
-                        </div>
                     </div>
                     <div class="form-group row">
                         <div class="col-sm-2">
@@ -95,21 +89,18 @@
                     <th>Installment Amount</th>
                     <th>Outgoing Date</th>
                     <th>Tenor</th>
-                    <th>Outstanding</th>
                     <th>NPL At</th>
                 </tr>
             </thead>
             <tbody>
                 @php
                     $toalLoanAmount = 0;
-                    $totalOutstanding = 0;
                     $totalNpl = 0;
                 @endphp
                 @foreach ($npl as $data)
                 <tr>
                     @php
                         $toalLoanAmount += $data->loan_amount;
-                        $totalOutstanding += $data->outstanding;
                         $totalNpl += $data->npl_at;
                     @endphp
                     <td>{{ ($npl->currentPage()-1) * $npl->perPage() + $loop->index + 1}}</td>
@@ -119,15 +110,12 @@
                     <td>Rp{{ number_format($data->installment_amount, 2, ',', '.') }} </td>
                     <td>{{ $data->disbursement_date }}</td>
                     <td>{{ $data->tenor }}</td>
-                    <td>Rp{{ number_format($data->outstanding, 2, ',', '.') }} </td>
                     <td>Rp{{ number_format($data->npl_at, 2, ',', '.') }} </td>
                 </tr>
                 @endforeach
                 <tr></tr>
                 <tr style="" aria-rowspan="3">
                     <td style="text-align: right;" colspan="2"><strong>Total Loan</strong></td>
-                    <td><strong>Rp{{ number_format($toalLoanAmount, 2, ',', '.') }}</strong></td>
-                    <td style="text-align: right;" colspan="2"><strong>Total Outstanding</strong></td>
                     <td><strong>Rp{{ number_format($toalLoanAmount, 2, ',', '.') }}</strong></td>
                     <td style="text-align: right;" colspan="2"><strong>Total NPL</strong></td>
                     <td><strong>Rp{{ number_format($toalLoanAmount, 2, ',', '.') }}</strong></td>

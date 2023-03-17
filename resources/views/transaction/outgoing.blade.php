@@ -1,7 +1,7 @@
 @extends('layouts.mainLayout')
- 
+
 @section('title', 'Outgoing')
- 
+
 @section('sidebar')
 @stop
 
@@ -59,7 +59,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)" data-type="currency"/> 
+                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)" data-type="currency"/>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -124,7 +124,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)" data-type="currency"/> 
+                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)" data-type="currency"/>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -227,7 +227,7 @@
 
         $(function()
         {
-            
+
         });
 
         function showAddOutgoingModal()
@@ -243,12 +243,12 @@
 
             // assign value
             var date = value[0].outgoing_date.split(' ');
-            
+
             $('#editOutgoingId').val(value[0].outgoing_id);
             $('#editTransactionDate').val(date[0]);
             $('#editAmount').val(formatNumber(value[0].outgoing_amount.toString()));
             $('#editNotes').val(value[0].notes);
-            
+
             $('#editCategory').val(value[0].outgoing_category);
             $('.selectpicker').selectpicker('refresh');
 
@@ -259,7 +259,7 @@
             keyup: function() {
                 formatCurrency($(this));
             },
-            blur: function() { 
+            blur: function() {
                 formatCurrency($(this), "blur");
             }
         });
@@ -273,19 +273,19 @@
             // appends $ to value, validates decimal side
             // and puts cursor back in right position.
             console.log(input);
-            
+
             // get input value
             var input_val = input.val();
-            
+
             // don't validate empty input
             if (input_val === "") { return; }
-            
+
             // original length
             var original_len = input_val.length;
 
-            // initial caret position 
+            // initial caret position
             var caret_pos = input.prop("selectionStart");
-                
+
             // check for decimal
             if (input_val.indexOf(".") >= 0) {
                 // get position of first decimal
@@ -302,12 +302,12 @@
 
                 // validate right side
                 right_side = formatNumber(right_side);
-                
+
                 // On blur make sure 2 numbers after decimal
                 if (blur === "blur") {
                 right_side += "00";
                 }
-                
+
                 // Limit decimal to only 2 digits
                 right_side = right_side.substring(0, 2);
 
@@ -320,13 +320,13 @@
                 // remove all non-digits
                 input_val = formatNumber(input_val);
                 input_val = input_val;
-                
+
                 // final formatting
                 if (blur === "blur") {
                 input_val += ".00";
                 }
             }
-            
+
             // send updated string to input
             input.val(input_val);
 
@@ -342,7 +342,7 @@
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
                 allowEnterKey: true,
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -371,7 +371,7 @@
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
                 allowEnterKey: true,
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -400,7 +400,7 @@
                 title: 'Please Confirm',
                 content: 'Are you sure you want to delete this data?',
                 allowEnterKey: true,
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -421,13 +421,13 @@
                                             title: 'Alert',
                                             content: 'Delete outgoing success',
                                             allowEnterKey: true,
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
                                                         location.reload();
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -437,13 +437,13 @@
                                             title: 'Alert',
                                             content: 'Delete outgoing Failed',
                                             allowEnterKey: true,
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
-                                                        
+
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -465,11 +465,11 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to leave and discard changes?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#' + modalId)[0].reset();
+                            // $('#' + modalId)[0].reset();
                             $('#' + modalId).modal('hide');
                         }
                     },

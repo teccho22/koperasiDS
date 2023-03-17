@@ -63,7 +63,7 @@ class DisbursementController extends Controller
 
     function searchDisbursement(Request $request)
     {
-        if($request->type == 'Display') 
+        if($request->type == 'Display')
         {
             $paginate = 10;
             if ($request->paginate)
@@ -81,17 +81,17 @@ class DisbursementController extends Controller
             }
             if ($request->searchDateFrom)
             {
-                $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') >= ?", date($request->searchDateFrom));
+                $sql->whereRaw("DATE_FORMAT(ms_outgoings.outgoing_date, '%Y-%m') >= ?", date($request->searchDateFrom));
             }
             if ($request->searchDateTo)
             {
-                $sql->whereRaw("DATE_FORMAT(ms_loans.create_at, '%Y-%m') <= ?", date($request->searchDateTo));
+                $sql->whereRaw("DATE_FORMAT(ms_outgoings.outgoing_date, '%Y-%m') <= ?", date($request->searchDateTo));
             }
 
             if (!$request->searchDateFrom && !$request->searchDateTo)
             {
-                $sql->whereMonth('ms_loans.create_at', '=', date('m'))
-                ->whereYear('ms_loans.create_at', '=', date('Y'));
+                $sql->whereMonth('ms_outgoings.outgoing_date', '=', date('m'))
+                ->whereYear('ms_outgoings.outgoing_date', '=', date('Y'));
             }
 
             // DB::connection()->enableQueryLog();
@@ -112,7 +112,7 @@ class DisbursementController extends Controller
                                 , 'ms_loans.tenor'
                         )
                         ->paginate($paginate);
-            
+
             $queries = DB::getQueryLog();
 
             $agentList = DB::table('customers')
@@ -136,7 +136,7 @@ class DisbursementController extends Controller
     function generateDisbursementExcel(Request $request)
     {
         $fileName = '';
-        
+
         if (!$request->searchDateFrom && !$request->searchDateTo)
         {
             $fileName = 'DisbursemetExcel_' . date('m') .'-'.date('Y').'_'.date('d-m-Y H:i:s').'.xlsx';
@@ -147,7 +147,7 @@ class DisbursementController extends Controller
         }
         else
         {
-            $fileName = 'DisbursemetExcel_' . date($request->searchDateTo).date($request->searchDateFrom).'_'.date('d-m-Y H:i:s').'.xlsx';   
+            $fileName = 'DisbursemetExcel_' . date($request->searchDateTo).date($request->searchDateFrom).'_'.date('d-m-Y H:i:s').'.xlsx';
         }
 
         return Excel::download(new DisbursemetExport($request->searchAgent, $request->searchDateFrom, $request->searchDateTo), $fileName);

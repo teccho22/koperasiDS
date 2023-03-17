@@ -1,7 +1,7 @@
 @extends('layouts.mainLayout')
- 
+
 @section('title', 'Transaction Management')
- 
+
 @section('sidebar')
 @stop
 
@@ -75,7 +75,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)" data-type="currency"/> 
+                                    <input type="text" id="amount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="decimalKeypress(event)" data-type="currency"/>
                                 </div>
                             </div>
                         </form>
@@ -130,7 +130,7 @@
                                     <span for="" class="control-label">Amount</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)" data-type="currency"/> 
+                                    <input type="text" id="editAmount" name="amount" class="form-control" placeholder="Rp2.390.000" onkeypress="return numericKeypress(event)" data-type="currency"/>
                                 </div>
                             </div>
                         </form>
@@ -204,7 +204,7 @@
                         @elseif ($data->trx_category == 'BankInterest')
                             Bank Interest
                         @else
-                            
+
                             @if ($data->incoming_category == null && $data->outgoing_category != null)
                                 {{ $data->trx_category }} - {{ $data->outgoing_category }}
                             @elseif ($data->outgoing_category == null && $data->incoming_category != null)
@@ -247,7 +247,7 @@
 
         $(function()
         {
-            
+
         });
 
         function showAddTransactionModal()
@@ -268,7 +268,7 @@
             keyup: function() {
                 formatCurrency($(this));
             },
-            blur: function() { 
+            blur: function() {
                 formatCurrency($(this), "blur");
             }
         });
@@ -281,19 +281,19 @@
         function formatCurrency(input, blur) {
             // appends $ to value, validates decimal side
             // and puts cursor back in right position.
-            
+
             // get input value
             var input_val = input.val();
-            
+
             // don't validate empty input
             if (input_val === "") { return; }
-            
+
             // original length
             var original_len = input_val.length;
 
-            // initial caret position 
+            // initial caret position
             var caret_pos = input.prop("selectionStart");
-                
+
             // check for decimal
             if (input_val.indexOf(".") >= 0) {
                 // get position of first decimal
@@ -310,12 +310,12 @@
 
                 // validate right side
                 right_side = formatNumber(right_side);
-                
+
                 // On blur make sure 2 numbers after decimal
                 if (blur === "blur") {
                 right_side += "00";
                 }
-                
+
                 // Limit decimal to only 2 digits
                 right_side = right_side.substring(0, 2);
 
@@ -328,13 +328,13 @@
                 // remove all non-digits
                 input_val = formatNumber(input_val);
                 input_val = input_val;
-                
+
                 // final formatting
                 if (blur === "blur") {
                 input_val += ".00";
                 }
             }
-            
+
             // send updated string to input
             input.val(input_val);
 
@@ -349,7 +349,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -377,7 +377,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -405,7 +405,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to delete this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -425,14 +425,14 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Delete transaction success',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
                                                         var url = '/' + result.redirect;
                                                         window.location = url;
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -441,13 +441,13 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Delete transaction Failed',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
-                                                        
+
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -469,11 +469,11 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to leave and discard changes?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
-                            $('#' + modalId)[0].reset();
+                            // $('#' + modalId).removeData();
                             $('#' + modalId).modal('hide');
                         }
                     },

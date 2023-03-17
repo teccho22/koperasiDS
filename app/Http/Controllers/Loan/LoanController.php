@@ -53,6 +53,28 @@ class LoanController extends Controller
                     'ms_loans.collateral_description',
                     'ms_loans.loan_id',
                     'ms_loans.customer_id',
+                    'ms_loans.collateral_file_path',
+                    'ms_loans.loan_collect',
+                    DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%Y-%b-%d") as loan_date')
+                )
+                ->orderBy('customer_id', 'asc')
+                ->get();
+
+        $loans = DB::table('ms_loans')
+                ->join('ms_outgoings','ms_loans.loan_id', '=', 'ms_outgoings.loan_id')
+                ->where('ms_loans.customer_id', $id)
+                ->where('ms_loans.is_active', 1)
+                ->where('ms_outgoings.is_active', 1)
+                ->select(
+                    'ms_loans.loan_number',
+                    'ms_loans.loan_amount',
+                    'ms_loans.installment_amount',
+                    'ms_loans.tenor',
+                    'ms_loans.collateral_description',
+                    'ms_loans.loan_id',
+                    'ms_loans.customer_id',
+                    'ms_loans.collateral_file_path',
+                    'ms_loans.loan_collect',
                     DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%Y-%b-%d") as loan_date')
                 )
                 ->orderBy('customer_id', 'asc')
@@ -281,7 +303,7 @@ class LoanController extends Controller
 
             return view('loan/loan', [
                 'customer' => $customer,
-                'loanList' => $loanList,
+                'loanList' => $loans,
                 'incomings' => $incoming,
                 'collateralList' => $collateralList,
                 'paginate' => $paginate,
@@ -292,7 +314,7 @@ class LoanController extends Controller
             $incoming = $loanList;
             return view('loan/loan', [
                 'customer' => $customer,
-                'loanList' => $loanList,
+                'loanList' => $loans,
                 'incomings' => $incoming,
                 'collateralList' => $collateralList,
                 'paginate' => $paginate,
@@ -304,6 +326,7 @@ class LoanController extends Controller
     function addLoan(Request $request)
     {
         $rules = [
+            'loanId'                => 'required',
             'loanDate'              => 'required',
             'custId'                => 'required',
             'loanAmount'            => 'required',
@@ -359,13 +382,20 @@ class LoanController extends Controller
             );
 
             $loanNumber = '';
-            if ($results[0]->loan_number == null)
+            if ($request->loanId != null)
             {
-                $loanNumber = 'L00001';
+                $loanNumber = $request->loanId;
             }
-            else{
-                // $results[0]->max_id
-                $loanNumber = 'L' . str_pad((int)Str::substr($results[0]->loan_number,1)+1, 5, '0', STR_PAD_LEFT);
+            else
+            {
+                if ($results[0]->loan_number == null)
+                {
+                    $loanNumber = 'L00001';
+                }
+                else{
+                    // $results[0]->max_id
+                    $loanNumber = 'L' . str_pad((int)Str::substr($results[0]->loan_number,1)+1, 5, '0', STR_PAD_LEFT);
+                }
             }
 
             $loan = DB::table('ms_loans')->insertGetId(
@@ -508,7 +538,7 @@ class LoanController extends Controller
             }
 
             $fileFolder = 'collateral_file';
-            $fileName = 'Collateral-' . '-' . date('Y-m-d') . '.' . $extendsion;
+            $fileName = 'Collateral-' . date('Y-m-d H:i:s') . '.' . $extendsion;
             // dd($fileName);
             $file->move($fileFolder,$fileName);
             $filePath = $fileFolder . '/' . $fileName;
@@ -524,53 +554,41 @@ class LoanController extends Controller
                             'collateral_file_path'=>$filePath,
                             'collateral_description'=>$request->editCollateralDescription]);
 
-
-
-        if ($result == 0)
+        if ($request->editLoanDate)
         {
-            if ($request->editLoanDate)
-            {
-                DB::table('ms_outgoings')
-                    ->where('loan_id',$request->loanId)
-                    ->where('is_active', 1)
-                    ->update(['outgoing_date' => date('Y-m-d H:i:s', strtotime($request->editLoanDate))]);
+            DB::table('ms_outgoings')
+                ->where('loan_id',$request->loanId)
+                ->where('is_active', 1)
+                ->update(['outgoing_date' => date('Y-m-d H:i:s', strtotime($request->editLoanDate))]);
 
-                $incomings = DB::select("
-                    SELECT
-                        incoming_id
-                    FROM
-                        ms_incomings
-                    WHERE
-                        loan_id = $request->loanId
-                        and incoming_category = 'Installment'
-                        and is_active=1
-                ");
+            $incomings = DB::select("
+                SELECT
+                    incoming_id
+                FROM
+                    ms_incomings
+                WHERE
+                    loan_id = $request->loanId
+                    and incoming_category = 'Installment'
+                    and is_active=1
+            ");
 
-                $date = date('Y-m-d', strtotime($request->editLoanDate));
-                for ($i=0; $i < sizeof($incomings); $i++) {
-                    $date = date("Y-m-d", strtotime( $date . "+1 month"));
+            $date = date('Y-m-d', strtotime($request->editLoanDate));
+            for ($i=0; $i < sizeof($incomings); $i++) {
+                $date = date("Y-m-d", strtotime( $date . "+1 month"));
 
-                    DB::table('ms_incomings')
-                        ->where('incoming_id', $incomings[$i]->incoming_id)
-                        ->where('is_active',1)
-                        ->update(['loan_due_date' => date('Y-m-d H:i:s', strtotime($date))]);
+                DB::table('ms_incomings')
+                    ->where('incoming_id', $incomings[$i]->incoming_id)
+                    ->where('is_active',1)
+                    ->update(['loan_due_date' => date('Y-m-d H:i:s', strtotime($date))]);
 
-                };
+            };
 
-                DB::commit();
-                return redirect()->route('loan',[$request->custId])->withSuccess(['editLoanDate' => 'Success']);
-            }
-            else{
-                DB::rollback();
-                return redirect()->route('loan',[$request->custId])->withErrors(['editLoanDate' => 'The loan date field is required']);
-            }
+            DB::commit();
+            return redirect()->route('loan',[$request->custId])->withSuccess(['editLoanDate' => 'Success']);
         }
-        else
-        {
-            $error = array('error' => 'Input Data Failed!!');
-
+        else{
             DB::rollback();
-            return redirect()->route('loan',[$request->custId])->withErrors(['errors' => 'Input Data Failed!!']);
+            return redirect()->route('loan',[$request->custId])->withErrors(['editLoanDate' => 'The loan date field is required']);
         }
     }
 
@@ -607,7 +625,8 @@ class LoanController extends Controller
                 ORDER BY i.incoming_id
             ");
 
-            $installment = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
+            $installment = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->installment_amount:0);
+            $remainingOutstanding = (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0);
             $outstanding = floatval(floatval($request->payAmount) - (sizeof($installmentAmount) > 0 ? $installmentAmount[0]->outstanding:0));
             $incomingId = $installmentAmount[0]->incoming_id;
 
@@ -648,7 +667,7 @@ class LoanController extends Controller
                 DB::statement("
                     update ms_incomings
                     set
-                        incoming_amount = incoming_amount + '" . $installment . "'
+                        incoming_amount = incoming_amount + '" . $remainingOutstanding . "'
                         , incoming_date = STR_TO_DATE('$request->paymentDate','%Y-%c-%d %H:%i:%s')
                         , update_at = NOW()
                         , loan_status = 'Paid'
@@ -681,9 +700,8 @@ class LoanController extends Controller
                     $status = '';
                     $pay = 0;
                     $incomingIds = '';
-                    // dd($outstanding);
 
-                    if ($outstanding < 0)
+                    if ($outstanding <= 0)
                     {
                         break;
                     }
@@ -817,6 +835,7 @@ class LoanController extends Controller
             ]);
 
             DB::commit();
+
             return response()->json([
                 'errNum' => 0,
                 'errStr' => 'Payment Success',
@@ -858,6 +877,7 @@ class LoanController extends Controller
                     'ms_loans.collateral_description',
                     'ms_loans.loan_id',
                     'ms_loans.customer_id',
+                    'ms_loans.collateral_file_path',
                     DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%d-%b-%Y") as loan_date')
                 )
                 ->paginate(10);
@@ -878,12 +898,23 @@ class LoanController extends Controller
                                         ->where('is_active', 1)
                                         ->get(['collateral_category']);
 
+        $maxCollect = DB::select("
+            SELECT
+                max(loan_collect) as collect
+            FROM
+                ms_loans
+            WHERE
+                customer_id = '$request->custId'
+                AND is_active = 1
+        ")[0]->collect;
+
         return view('loan/loan', [
             'customer' => $customer,
             'loanList' => $loanList,
             'incomings' => $incoming,
             'collateralList' => $collateralList,
-            'paginate' => 10
+            'paginate' => 10,
+            'collect' => $maxCollect
         ]);
     }
 
@@ -963,28 +994,13 @@ class LoanController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'spNo'              => 'required',
-            'customerId'        => 'required'
+            'customerId'        => 'required',
+            'loanId'            => 'required'
         ]);
 
         if (!$validator->fails())
         {
             $limit = $request->spNo + 1;
-            // get loan detail
-            $loanDetail = DB::select("
-                SELECT
-                    l.loan_id,
-                    max(l.loan_dpd),
-                    max(l.loan_collect)
-                FROM
-                    ms_loans l
-                WHERE
-                    l.customer_id='$request->customerId'
-                    AND l.is_active=1
-                GROUP BY
-                    l.loan_id
-                ORDER BY l.loan_dpd DESC, l.loan_collect DESC
-                LIMIT 1
-            ")[0];
 
             // get customer detail
             $customerDetails = DB::select("
@@ -1003,7 +1019,7 @@ class LoanController extends Controller
                     AND c.is_active=1
                     AND c.customer_id = l.customer_id
                     AND l.is_active=1
-                    AND l.loan_id='$loanDetail->loan_id'
+                    AND l.loan_id='$request->loanId'
             ")[0];
 
 
@@ -1016,7 +1032,7 @@ class LoanController extends Controller
                     FROM
                         ms_incomings i
                     WHERE
-                        i.loan_id = '$loanDetail->loan_id'
+                        i.loan_id = '$request->loanId'
                         AND i.is_active = 1
                         AND i.loan_status='Overdue'
                 ")[0];
@@ -1025,7 +1041,7 @@ class LoanController extends Controller
                     SELECT
                         GROUP_CONCAT(incoming_id SEPARATOR ', ') ids
                     FROM ms_incomings
-                    WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
+                    WHERE loan_id = '$request->loanId' and loan_status='Overdue' and is_active = 1
                 ")[0];
             }
             else
@@ -1036,7 +1052,7 @@ class LoanController extends Controller
                     FROM
                         ms_incomings i
                     WHERE
-                        i.loan_id = '$loanDetail->loan_id'
+                        i.loan_id = '$request->loanId'
                         AND i.is_active = 1
                         AND i.loan_status='Overdue'
                 ")[0];
@@ -1045,7 +1061,7 @@ class LoanController extends Controller
                     SELECT
                         SUBSTRING_INDEX(GROUP_CONCAT(incoming_id SEPARATOR ', '),', ',$limit) ids
                     FROM ms_incomings
-                    WHERE loan_id = '$loanDetail->loan_id' and loan_status='Overdue' and is_active = 1
+                    WHERE loan_id = '$request->loanId' and loan_status='Overdue' and is_active = 1
                 ")[0];
             }
 
@@ -1056,7 +1072,7 @@ class LoanController extends Controller
                 FROM
                     ms_incomings i
                 WHERE
-                    i.loan_id = '$loanDetail->loan_id'
+                    i.loan_id = '$request->loanId'
                     AND i.is_active = 1
                     AND i.loan_status IN ('Paid', 'Not Fully Paid')
             ");
@@ -1067,7 +1083,7 @@ class LoanController extends Controller
                 FROM
                     ms_incomings i
                 WHERE
-                    i.loan_id = '$loanDetail->loan_id'
+                    i.loan_id = '$request->loanId'
                     AND i.is_active = 1
                     AND i.loan_status='Paid'
             ")[0];
@@ -1080,7 +1096,7 @@ class LoanController extends Controller
                     ms_incomings i,
                     ms_loans l
                 WHERE
-                    l.loan_id = '$loanDetail->loan_id'
+                    l.loan_id = '$request->loanId'
                     AND i.loan_id = l.loan_id
                     AND i.is_active = 1
                     AND i.loan_status='Overdue'

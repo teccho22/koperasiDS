@@ -358,7 +358,7 @@
                     <td>
                         <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditModal('{{ $data->customer_id}}')" style="position: sticky; margin-right:5px; margin-top: 5px;"><i class="fa fa-pen"></i></button>
                         <a id="viewDetail" type="button" class="btn btn-primary" title="View Detail" href="{{ route('loan', ['id' => $data->customer_id]) }}" style="margin-top: 5px;"><i class="fa fa-eye"></i></a>
-                        <a id="deleteCustomer" type="button" class="btn btn-danger" title="Delete Customer" href="{{ route('deleteCustomer', ['id' => $data->customer_id]) }}" style="margin-top: 5px;"><i class="fa fa-trash"></i></a>
+                        <a id="deleteCustomer" type="button" class="btn btn-danger" title="Delete Customer" onclick="confirmDelete('{{ $data->customer_id}}')" style="margin-top: 5px;"><i class="fa fa-trash"></i></a>
                     </td>
                 </tr>
                 @endforeach
@@ -707,6 +707,27 @@
                         btnClass: 'btn-primary',
                         action: function(){
                             $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
+                    }
+                }
+            });
+        }
+
+        function confirmDelete(id)
+        {
+            // $('#addCustomerForm')[0].reset();
+            var custId = id;
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to delete this record?',
+                buttons: {
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            var url = "{{ route('deleteCustomer') }}?id=" + id;
+                            window.location.href = url;
                         }
                     },
                     cancel: function(){
