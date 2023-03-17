@@ -1,7 +1,7 @@
 @extends('layouts.mainLayout')
- 
+
 @section('title', 'Loan')
- 
+
 @section('sidebar')
 @stop
 
@@ -12,7 +12,7 @@
             var text = "<ul>";
             var errors = {!! json_encode($errors->toArray()) !!};
             console.log(errors);
-                                    
+
             $.each(errors, function(key, value){
                 for (var i=0; i<value.length; i++)
                 {
@@ -94,7 +94,7 @@
                                     <span for="" class="control-label">Interest Rate</span>
                                 </div>
                                 <div class="col-sm-8 required">
-                                    <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)" data-type="currency"/> 
+                                    <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)" data-type="currency"/>
                                 </div>
                             </div>
                             <div class="form-group row required">
@@ -202,7 +202,7 @@
                                 <div class="col-sm-8">
                                     <input type="text" name="editCollateralCategory" id="editCollateralCategory" class="form-control" placeholder="Collateral Category" list="collateralList"/>
                                     <datalist id="collateralList">
-                                        
+
                                     </datalist>
                                 </div>
                             </div>
@@ -283,8 +283,8 @@
 
     {{-- customer detail --}}
     <div id="custDetail" class="container custDetail">
-        <div class="row breadcrumbs" style="font-family: 'Righteous', cursive;">
-            <a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/back.png') }}"> <b>Customer/ Loan</b></a>
+        <div class="row breadcrumbs" style="font-family: 'Righteous', cursive; font-size:25px; display:flex;align-content:center;">
+            <a href="{{ route('customer') }}"><img src="{{ URL::asset('assets/images/back.png') }}" style="width: 35px"> <b>Customer/ Loan</b></a>
         </div>
         <div class="row">
             <div class="col-sm-6">
@@ -316,14 +316,6 @@
     <div class="container" style="margin-bottom: 25px">
         <button id="btnBlacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="blacklist('{{ $customer->customer_id }}')">Blacklist</button>
         <button id="btnUnblacklist" type="button" class="btn btn-danger mr-4" title="Add" style="float: right; margin: 5px;width:100px" onclick="unblacklist('{{ $customer->customer_id }}')">Unblacklist</button>
-        <div class="dropdowns">
-            <button onclick="myFunction()" class="btn btn-primary mr-4 dropbtn" id="btnPrint" style="float: right; margin: 5px;width:100px">Print</button>
-            <div id="myDropdown" class="dropdowns-content">
-              <a onclick="generateSp('1')" id="sp1" hidden>SP 1</a>
-              <a onclick="generateSp('2')" id="sp2" hidden>SP 2</a>
-              <a onclick="generateSp('3')" id="sp3" hidden>SP 3</a>
-            </div>
-          </div>
     </div>
     <div class="container custDetail">
         <div class="row">
@@ -367,16 +359,14 @@
             </thead>
             <tbody>
                 @foreach ($loanList as $data)
-                <tr id="loan{{ $loop->index }}" class="inactive"
-                    onclick="showHideRow('{{ $loop->index }}');"
-                >
-                    <td id="icon{{ $loop->index }}"><i class="fa fa-angle-down"></i></td>
-                    <td>{{ $data->loan_number}}</td>
-                    <td>{{ date("d/m/Y", strtotime($data->loan_date))}}</td>
-                    <td>{{ number_format($data->loan_amount, 2, ',', '.')}}</td>
-                    <td>{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
-                    <td>{{ $data->tenor}}</td>
-                    <td style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
+                <tr id="loan{{ $loop->index }}" class="inactive">
+                    <td onclick="showHideRow('{{ $loop->index }}');" id="icon{{ $loop->index }}"><i class="fa fa-angle-down"></i></td>
+                    <td onclick="showHideRow('{{ $loop->index }}');">{{ $data->loan_number}}</td>
+                    <td onclick="showHideRow('{{ $loop->index }}');">{{ date("d/m/Y", strtotime($data->loan_date))}}</td>
+                    <td onclick="showHideRow('{{ $loop->index }}');">{{ number_format($data->loan_amount, 2, ',', '.')}}</td>
+                    <td onclick="showHideRow('{{ $loop->index }}');">{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
+                    <td onclick="showHideRow('{{ $loop->index }}');">{{ $data->tenor}}</td>
+                    <td onclick="showHideRow('{{ $loop->index }}');" style="word-wrap: break-word; max-width: 250px; min-width: 250px;">
                         @if($data->collateral_description != null)
                             {{ $data->collateral_description}}
                         @else
@@ -384,9 +374,22 @@
                         @endif
                     </td>
                     <td>
-                        <button id="payInstallment" type="button" class="btn btn-primary" title="Pay" onclick="showPayLoanModal('{{ $data->loan_id }}', '{{ $data->loan_number}}');">Pay</button>
-                        <button id="editLoan" type="button" class="btn btn-primary" title="Edit" onclick="showEditLoanModal({{ $data->loan_id }});"><i class="fa fa-pen"></i> Edit</button>
-                        <button id="agreementBtn" type="button" class="btn btn-primary" title="Agreement" onclick="downloadAgreement({{ $data->loan_id }});" style="text-align: center !important;">Agreement Letter</button>
+                        <button id="payInstallment" type="button" class="btn btn-primary" title="Pay" onclick="showPayLoanModal('{{ $data->loan_id }}', '{{ $data->loan_number}}');" style="height: 34; padding-top: 9;"><i class="fa fa-money-bill"></i></button>
+                        <button id="editLoan" type="button" class="btn btn-primary" title="Edit" onclick="showEditLoanModal({{ $data->loan_id }});" style="height: 34; padding-top: 9;"><i class="fa fa-pen"></i></button>
+                        @if($data->collateral_file_path != null)
+                            <a type="button" class="btn btn-success" title="Download File" href="{{ URL::asset($data->collateral_file_path) }}" target="_blank" style="height: 34; padding-top: 9;"><i class="fa fa-download"></i></a>
+                        @endif
+
+                        <a id="deleteLoan" type="button" class="btn btn-danger" title="Delete Loan" onclick="confirmDelete('{{ $data->loan_id}}', '{{ $customer->customer_id}}')" style="height: 34; padding-top: 9;"><i class="fa fa-trash"></i></a>
+                        <div class="dropdowns">
+                            <button onclick="myFunction()" class="btn btn-primary mr-4 dropbtn" id="btnPrint" style="height: 34; padding-top: 9;"><i class="fa fa-print"></i></button>
+                            <div id="myDropdown" class="dropdowns-content">
+                              <a onclick="downloadAgreement({{ $data->loan_id }});">Agreement Letter</a>
+                              <a onclick="generateSp('1', {{ $data->loan_id }})" id="sp1" hidden>SP 1</a>
+                              <a onclick="generateSp('2', {{ $data->loan_id }})" id="sp2" hidden>SP 2</a>
+                              <a onclick="generateSp('3', {{ $data->loan_id }})" id="sp3" hidden>SP 3</a>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 <tr id="hiddenLoan{{ $loop->index }}" class="hidden_row">
@@ -397,6 +400,7 @@
                                 <tr>
                                     <th>Installment No</th>
                                     <th>Installment Date</th>
+                                    <th>Payment Date</th>
                                     <th>Amount</th>
                                     <th>Outstanding</th>
                                     <th>Status</th>
@@ -412,6 +416,7 @@
                                             <tr>
                                                 <td>{{ $data->loan_number}}-{{ $count }}</td>
                                                 <td>{{ date("d/m/Y", strtotime($installment->loan_due_date))}}</td>
+                                                <td>{{ ($installment->incoming_date==null?'-':date("d/m/Y", strtotime($installment->incoming_date)))}}</td>
                                                 <td>{{ number_format($data->installment_amount, 2, ',', '.')}}</td>
                                                 <td>{{ number_format(($installment->incoming_amount - $data->installment_amount) * -1, 2, ',', '.')}}</td>
                                                 <td>{{ $installment->loan_status}}</td>
@@ -459,27 +464,21 @@
         var index = 1;
         var customer = {!! json_encode($customer) !!};
         var collect = {!! json_encode($collect) !!};
-        // console.log({!! json_encode($incomings->toArray()) !!});
+        console.log(incomingList);
         $('#pagination').val({!! json_encode($paginate) !!});
         function showPagination()
         {
-            window.location = "{{ url('/loan/') }}/"+customer.customer_id+"?paginate=" + $('#pagination').val();
+            window.location = "{{ url('loan') }}/"+customer.customer_id+"?paginate=" + $('#pagination').val();
         }
 
         function myFunction() {
-            document.getElementById("myDropdown").classList.toggle("show");
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropbtn')) {
-                var dropdowns = document.getElementsByClassName("dropdowns-content");
-                var i;
-                for (i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
+            if ($('.dropdowns-content').hasClass('show'))
+            {
+                $('.dropdowns-content').removeClass('show');
+            }
+            else
+            {
+                $('.dropdowns-content').addClass('show');
             }
         }
 
@@ -501,7 +500,7 @@
 
             if (collect < 3)
             {
-                $('.dropdowns').hide();
+                // $('.dropdowns').hide();
             }
             else
             {
@@ -544,7 +543,7 @@
             var loan = $.grep(loanList, function(v) {
                 return v.loan_id == id;
             });
-            
+
             var date = new Date(loan[0]['loan_date']);
             var timestamp = date.getTime() - date.getTimezoneOffset() * 60000;
             var loanDate = new Date(timestamp);
@@ -554,7 +553,7 @@
             $('#editCollateralCategory').val(loan[0]['collateral_category']);
             $('#editCollateralFiles').val(loan[0]['collateral_file_path']);
             $('#editCollateralDescription').val(loan[0]['collateral_description']);
-            
+
             $('#modalEditLoan').modal('show');
         }
 
@@ -572,13 +571,13 @@
                 var loan = $.grep(loanList, function(v) {
                     return v.loan_id == id;
                 });
-                
+
                 var outstanding = loan[0]['installment_amount'] - incoming[0]['incoming_amount'];
-    
+
                 $('#payAmount').val(outstanding);
 
                 formatCurrency($('#payAmount'));
-    
+
                 $('#modalPayLoan').modal('show');
             }
             else
@@ -601,7 +600,7 @@
             keyup: function() {
                 formatCurrency($(this));
             },
-            blur: function() { 
+            blur: function() {
                 formatCurrency($(this), "blur");
             }
         });
@@ -614,19 +613,19 @@
         function formatCurrency(input, blur) {
             // appends $ to value, validates decimal side
             // and puts cursor back in right position.
-            
+
             // get input value
             var input_val = input.val();
-            
+
             // don't validate empty input
             if (input_val === "") { return; }
-            
+
             // original length
             var original_len = input_val.length;
 
-            // initial caret position 
+            // initial caret position
             var caret_pos = input.prop("selectionStart");
-                
+
             // check for decimal
             if (input_val.indexOf(".") >= 0) {
                 // get position of first decimal
@@ -643,12 +642,12 @@
 
                 // validate right side
                 right_side = formatNumber(right_side);
-                
+
                 // On blur make sure 2 numbers after decimal
                 if (blur === "blur") {
                 right_side += "00";
                 }
-                
+
                 // Limit decimal to only 2 digits
                 right_side = right_side.substring(0, 2);
 
@@ -661,13 +660,13 @@
                 // remove all non-digits
                 input_val = formatNumber(input_val);
                 input_val = input_val;
-                
+
                 // final formatting
                 if (blur === "blur") {
                 input_val += ".00";
                 }
             }
-            
+
             // send updated string to input
             input.val(input_val);
 
@@ -721,7 +720,7 @@
                 tenor = $('#tenor').val();
 
                 installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
-                
+
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
                 formatCurrency($('#installmentAmount'));
             }
@@ -775,14 +774,14 @@
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
                 formatCurrency($('#installmentAmount'));
             }
-        }           
+        }
 
         function validate(e)
         {
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -806,7 +805,7 @@
                             .attr("name", "installmentAmount")
                             .attr("value", $('#installmentAmount').val())
                             .appendTo("#addCustomerForm");
-                            
+
                             $("<input />").attr("type", "hidden")
                             .attr("name", "provisionFee")
                             .attr("value", $('#provisionFee').val())
@@ -816,7 +815,7 @@
                             .attr("name", "disbursementAmount")
                             .attr("value", $('#disbursementAmount').val())
                             .appendTo("#addCustomerForm");
-                            
+
                             $('#addCustomerForm').submit();
                             return true;
                         }
@@ -833,10 +832,10 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to edit this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
-                        action: function(){                            
+                        action: function(){
                             $('#editLoanForm').submit();
                             return true;
                         }
@@ -849,7 +848,7 @@
         }
 
         function showHideRow(row) {
-            
+
             if ($("#hiddenLoan" + row).css('display') == 'none')
             {
                 $('.hidden_row').css('display', 'none');
@@ -886,7 +885,7 @@
 
             $('#' + selectId).html('');
             $('#' + selectId).selectpicker('destroy');
-            
+
             if (incoming.length == 0)
             {
                 $('#' + selectId).prop('disabled', true);
@@ -908,7 +907,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to pay?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -923,6 +922,7 @@
 
                                 data.push(JSON.stringify(payData));
                             }
+                            var payAmount = Number($('#payAmount').val().replace(/[^0-9.-]+/g,""));
 
                             $.ajax
                             ({
@@ -931,7 +931,7 @@
                                 type: 'POST',
                                 url: "{{ url('/payLoan') }}",
                                 data: {
-                                    payAmount : $('#payAmount').val(),
+                                    payAmount : payAmount,
                                     loanId : $('#payLoanId').val(),
                                     customerId : $('#payCustomerId').val(),
                                     paymentDate : $('#inputPaymentDate').val()
@@ -941,7 +941,7 @@
                                     if (result.errNum == 1)
                                     {
                                         var text = "<ul>";
-                                    
+
                                         $.each(result.errors, function(key, value){
                                             for (var i=0; i<value.length; i++)
                                             {
@@ -981,7 +981,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to blacklist this user?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -1002,14 +1002,14 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Blacklist success',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
                                                         var url = '/' + result.redirect + '/' + result.custId;
                                                         location.reload();
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -1017,13 +1017,13 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Blacklist Failed',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
-                                                        
+
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -1043,7 +1043,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to unblacklist this user?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -1064,14 +1064,14 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Unblacklist success',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
                                                         var url = '/' + result.redirect + '/' + result.custId;
                                                         location.reload();
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -1079,13 +1079,13 @@
                                         $.confirm ({
                                             title: 'Alert',
                                             content: 'Unblacklist Failed',
-                                            buttons: { 
+                                            buttons: {
                                                 ok: {
                                                     btnClass: 'btn-primary',
                                                     action: function(){
-                                                        
+
                                                     }
-                                                }  
+                                                }
                                             }
                                         })
                                     }
@@ -1107,7 +1107,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to leave and discard changes?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -1121,7 +1121,7 @@
             });
         }
 
-        function generateSp(sp)
+        function generateSp(sp, loanId)
         {
             $.ajax
             ({
@@ -1131,7 +1131,8 @@
                 url: "{{ url('/generateSp') }}",
                 data: {
                     spNo : sp,
-                    customerId : customer.customer_id
+                    customerId : customer.customer_id,
+                    loanId : loanId
                 },
                 success: function(result)
                 {
@@ -1149,7 +1150,7 @@
                         $('#spNumber').val(sp);
                         $('#installmentPaidDetail').val(installmentPaidDetail);
                         console.log($('#spNumber').val());
-    
+
                         var bpForm = document.getElementById("form");
 
                         // dev
@@ -1159,13 +1160,13 @@
                         // prod
                         // bpForm.setAttribute("action","{{ URL::asset('public/assets/template/sp.php') }}");
                         // exportwindow = window.open("{{ URL::asset('public/assets/template/sp.php') }}", "sp", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
-                        
+
                         bpForm.submit();
                     }
                 }
             });
         }
-        
+
         function downloadAgreement(loanId)
         {
             $.ajax
@@ -1186,18 +1187,39 @@
                         var loanDetail = JSON.stringify(result['loanDetail']);
                         $('#customerDetails').val(custDetail);
                         $('#loanDetail').val(loanDetail);
-    
+
                         var agreementForm = document.getElementById("agreementForm");
 
                         // dev
-                        // agreementForm.setAttribute("action","{{ URL::asset('assets/template/agreement.php') }}");
-                        // exportwindow = window.open("{{ URL::asset('assets/template/agreement.php') }}", "agreement", "resizable=yes,scrollbars=yes,scrollbars=1");
+                        agreementForm.setAttribute("action","{{ URL::asset('assets/template/agreement.php') }}");
+                        exportwindow = window.open("{{ URL::asset('assets/template/agreement.php') }}", "agreement", "resizable=yes,scrollbars=yes,scrollbars=1");
 
                         // prod
-                        agreementForm.setAttribute("action","{{ URL::asset('public/assets/template/agreement.php') }}");
-                        exportwindow = window.open("{{ URL::asset('public/assets/template/agreement.php') }}", "agreement", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
-                        
+                        // agreementForm.setAttribute("action","{{ URL::asset('public/assets/template/agreement.php') }}");
+                        // exportwindow = window.open("{{ URL::asset('public/assets/template/agreement.php') }}", "agreement", "height=3508,width=2480,resizable=yes,scrollbars=yes,scrollbars=1");
+
                         agreementForm.submit();
+                    }
+                }
+            });
+        }
+
+        function confirmDelete(id, custId)
+        {
+            // $('#addCustomerForm')[0].reset();
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to delete this record?',
+                buttons: {
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            var url = "{{ route('deleteLoan') }}?id=" + id + "&custId=" + custId;
+                            console.log(url);
+                            window.location.href = url;
+                        }
+                    },
+                    cancel: function(){
                     }
                 }
             });
@@ -1220,7 +1242,6 @@
     }
 
     .dropdowns {
-        float: right;
         position: relative;
         display: inline-block;
     }
@@ -1229,13 +1250,13 @@
         display: none;
         position: absolute;
         background-color: #fffefe;
-        min-width: 110px;
+        min-width: 150px;
         overflow: auto;
         box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-        right: 0;
+        right: -45;
         z-index: 1;
         font-size: 15px;
-        margin-top: 40px
+        margin-top: 8px
     }
 
     .dropdowns-content a {

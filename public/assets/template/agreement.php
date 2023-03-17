@@ -10,7 +10,7 @@
             }
             @page {
                 size: A4;
-                margin: 1.5cm 2.2cm 1.5cm 2.2cm !important; 
+                margin: 1.5cm 2.2cm 1.5cm 2.2cm !important;
             }
             @media print {
                 html, body {
@@ -18,7 +18,7 @@
                     height: 297mm;
                 }
                 .main-page {
-                    
+
                     border: initial;
                     border-radius: initial;
                     width: initial;
@@ -249,16 +249,16 @@
         $('.customerPhone').html(customerDetail.customer_phone);
         $('.customerIdNumber').html(customerDetail.customer_id_number);
         $('.customerProffesion').html(customerDetail.customer_proffesion);
-        $('.loanAmount').html(loanDetail.loan_amount);
+        $('.loanAmount').html(parseFloat(loanDetail.loan_amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
         $('.interestRate').html(loanDetail.interest_rate);
-        $('.installmentAmount').html(loanDetail.installment_amount);
+        $('.installmentAmount').html(parseFloat(loanDetail.installment_amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
         $('.tenor').html(loanDetail.tenor);
-        $('.provisionFee').html(loanDetail.provision_fee);
-        $('.disbursementAmount').html(loanDetail.disbursement_amount);
+        $('.provisionFee').html(parseFloat(loanDetail.provision_fee, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
+        $('.disbursementAmount').html(parseFloat(loanDetail.disbursement_amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
         $('.loanDate').html(loanDetail.loan_date);
         $('.collateral').html(loanDetail.collateral_description);
-        
+
         window.print();
     </script>
-    
+
 </html>

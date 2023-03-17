@@ -9,6 +9,7 @@ use App\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Auth;
+use PDO;
 
 class CustomerController extends Controller
 {
@@ -25,7 +26,7 @@ class CustomerController extends Controller
         {
             return redirect()->intended('/');
         }
-        
+
         $paginate = 10;
         if ($request->paginate)
         {
@@ -45,7 +46,7 @@ class CustomerController extends Controller
                         ->distinct()
                         ->where('is_active', 1)
                         ->get(['customer_proffesion']);
-        
+
         $collateralList = DB::table('ms_loans')
                         ->select('collateral_category')
                         ->distinct()
@@ -83,19 +84,19 @@ class CustomerController extends Controller
         if ($this->validate($request, $rules))
         {
             $firstStringCharacter = strtoupper(substr($request->customerName, 0, 1));
-            
+
             $results = DB::select("
-                SELECT 
+                SELECT
                     max(customer_id) as max_id
-                FROM 
-                    customers 
-                WHERE 
+                FROM
+                    customers
+                WHERE
                     customer_id like '". $firstStringCharacter . "%'
-                    and is_active = 1    
+                    and is_active = 1
                 "
             );
             // dd($results);
-            
+
             if ($results[0]->max_id == null)
             {
                 $custId = $firstStringCharacter . '00001';
@@ -104,9 +105,9 @@ class CustomerController extends Controller
                 // $results[0]->max_id
                 $custId = $firstStringCharacter . str_pad((int)Str::substr($results[0]->max_id,1)+1, 5, '0', STR_PAD_LEFT);
             }
-            
+
             DB::beginTransaction();
-            
+
             $customer = DB::table('customers')->insert(
                 [
                     'customer_id' => strtoupper($request->customerId),
@@ -124,7 +125,7 @@ class CustomerController extends Controller
                     'updated_at' => date('Y-m-d H:i:s')
                 ]
             );
-            
+
             if ($customer)
             {
                 $file = $request->file('collateralFiles');
@@ -132,7 +133,7 @@ class CustomerController extends Controller
                 $filePath = '';
                 $extendsion = '';
                 if ($file)
-                {    
+                {
                     if ($file->getMimeType() == 'image/jpeg')
                     {
                         $extendsion = 'jpeg';
@@ -146,7 +147,7 @@ class CustomerController extends Controller
                         $extendsion = 'pdf';
                     }
                     else{
-                        return redirect()->route('customer')->with(['error' => 'File must be png, pdf or jpeg']); 
+                        return redirect()->route('customer')->with(['error' => 'File must be png, pdf or jpeg']);
                     }
 
                     $fileFolder = 'collateral_file';
@@ -157,13 +158,13 @@ class CustomerController extends Controller
                 }
 
                 $results = DB::select("
-                    SELECT 
-                        max(loan_number) as loan_number                      
-                    FROM 
-                        ms_loans 
-                    WHERE 
+                    SELECT
+                        max(loan_number) as loan_number
+                    FROM
+                        ms_loans
+                    WHERE
                         customer_id = 'strtoupper($request->customerId)'
-                        and is_active=1    
+                        and is_active=1
                     "
                 );
 
@@ -190,7 +191,7 @@ class CustomerController extends Controller
                         'update_by' => 3
                     ]
                 );
-                        
+
                 if ($loan)
                 {
                     $outgoing = DB::table('ms_outgoings')->insertGetId([
@@ -207,14 +208,14 @@ class CustomerController extends Controller
                     ]);
 
                     $cashAccount = DB::select("
-                        SELECT 
+                        SELECT
                             cash_account,
-                            bank_account                     
-                        FROM 
-                            trx_account_mgmt 
-                        WHERE 
+                            bank_account
+                        FROM
+                            trx_account_mgmt
+                        WHERE
                             id = (SELECT max(id) from trx_account_mgmt where is_active=1)
-                            and is_active=1    
+                            and is_active=1
                     ");
 
                     if (sizeof($cashAccount) > 0)
@@ -242,12 +243,12 @@ class CustomerController extends Controller
                     ]);
                     // loan status
                     // 1 : Haven't due yet
-                    // 2 : Due 
+                    // 2 : Due
                     // 3 : Paid
                     // 4 : Overdue
                     $tenor = $request->tenor;
                     $date = date('Y-m-d', strtotime($request->loanDate));
-                    for ($i=0; $i < $tenor; $i++) { 
+                    for ($i=0; $i < $tenor; $i++) {
                         $date = date("Y-m-d", strtotime( $date . "+1 month"));
                         $incoming = DB::table('ms_incomings')->insertGetId(
                             [
@@ -266,7 +267,7 @@ class CustomerController extends Controller
                         if (!$incoming)
                         {
                             DB::rollback();
-                            return redirect()->route('customer')->with(['error' => 'Input Data Failed!!']); 
+                            return redirect()->route('customer')->with(['error' => 'Input Data Failed!!']);
                             break;
                         }
                     };
@@ -277,7 +278,7 @@ class CustomerController extends Controller
                 else
                 {
                     DB::rollback();
-                    return redirect()->route('customer')->with(['error' => 'Input Data Failed!!']); 
+                    return redirect()->route('customer')->with(['error' => 'Input Data Failed!!']);
                 }
             }
             else
@@ -291,7 +292,7 @@ class CustomerController extends Controller
     function getEditData(Request $request)
     {
         $results = DB::select("
-            SELECT 
+            SELECT
                 customer_id,
                 customer_name,
                 customer_id_number,
@@ -299,12 +300,12 @@ class CustomerController extends Controller
                 customer_proffesion,
                 customer_phone,
                 customer_agent
-            FROM 
-                customers 
-            WHERE 
+            FROM
+                customers
+            WHERE
                 customer_id like '". $request->id . "%'
                 AND is_active = 1
-            "    
+            "
         );
 
         return response()->json(['result' => $results]);
@@ -380,5 +381,62 @@ class CustomerController extends Controller
             'collateralList' => $collateralList,
             'paginate' => 10
         ]);
+    }
+
+    function deleteCustomer(Request $request)
+    {
+        if ($request->id)
+        {
+            $loanIds = DB::table('ms_loans')
+                        ->select('loan_id')
+                        ->where('is_active', 1)
+                        ->where('customer_id', $request->id)
+                        ->get()->pluck('loan_id')->all();
+
+            $incomingIds = DB::table('ms_incomings')
+                            ->select('incoming_id')
+                            ->where('is_active', 1)
+                            ->whereIn('loan_id', $loanIds)
+                            ->get()->pluck('incoming_id')->all();
+
+            $outgoingIds = DB::table('ms_outgoings')
+                            ->select('outgoing_id')
+                            ->where('is_active', 1)
+                            ->whereIn('loan_id', $loanIds)
+                            ->get()->pluck('outgoing_id')->all();
+
+            DB::table('trx_account_mgmt')
+            ->whereIn('incoming_id', $incomingIds)
+            ->orWhereIn('outgoing_id', $outgoingIds)
+            ->where('is_active', 1)
+            ->delete();
+
+            DB::table('ms_incomings')
+            ->whereIn('loan_id', $loanIds)
+            ->where('is_active', 1)
+            ->delete();
+
+            DB::table('ms_outgoings')
+            ->whereIn('loan_id', $loanIds)
+            ->where('is_active', 1)
+            ->delete();
+
+            DB::table('ms_loans')
+            ->where('customer_id', $request->id)
+            ->where('is_active', 1)
+            ->delete();
+
+            DB::table('customers')
+            ->where('customer_id', $request->id)
+            ->where('is_active', 1)
+            ->delete();
+
+            DB::commit();
+            return redirect()->route('customer')->with(['success' => 'Data Berhasil Dihapus!']);
+        }
+        else
+        {
+            return redirect()->route('customer')->with(['failed' => 'Data gagal Dihapus!']);
+        }
     }
 }

@@ -59,14 +59,14 @@ class OutgoingController extends Controller
             );
 
             $cashAccount = DB::select("
-                SELECT 
+                SELECT
                     cash_account,
-                    bank_account                     
-                FROM 
-                    trx_account_mgmt 
-                WHERE 
+                    bank_account
+                FROM
+                    trx_account_mgmt
+                WHERE
                     id = (SELECT max(id) from trx_account_mgmt where is_active=1)
-                    and is_active=1    
+                    and is_active=1
             ");
 
             if (sizeof($cashAccount) > 0)
@@ -79,11 +79,11 @@ class OutgoingController extends Controller
                 $total=0;
                 $bank_account = 0;
             }
-                
+
             $transaction = DB::table('trx_account_mgmt')->insert([
                 'trx_category'      => 'Outgoing',
                 'trx_amount'        => $request->amount,
-                'incoming_id'       => $outgoing,
+                'outgoing_id'       => $outgoing,
                 'cash_account'      => $total,
                 'bank_account'      => $bank_account,
                 'is_active'         => 1,
@@ -152,7 +152,7 @@ class OutgoingController extends Controller
                 ->update([
                         'is_active' => 0
                 ]);
-            
+
             $transaction = DB::table('trx_account_mgmt')
                 ->where('outgoing_id', $request->outgoingId)
                 ->where('is_active', 1)

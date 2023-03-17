@@ -1,7 +1,7 @@
 @extends('layouts.mainLayout')
- 
+
 @section('title', 'Customer')
- 
+
 @section('sidebar')
 @stop
 
@@ -11,7 +11,7 @@
         <script>
             var text = "<ul>";
             var errors = {!! json_encode($errors->toArray()) !!};
-                                    
+
             $.each(errors, function(key, value){
                 for (var i=0; i<value.length; i++)
                 {
@@ -141,7 +141,7 @@
                                         <span for="" class="control-label">Interest Rate</span>
                                     </div>
                                     <div class="col-sm-8 required">
-                                        <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)"/> 
+                                        <input type="text" id="interestRate" name="interestRate" class="form-control" placeholder="2.5%" value="2.5" onkeypress="decimalKeypress(event)" onkeydown="calculateInterest(event)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row required">
@@ -356,8 +356,9 @@
                     <td>{{ $data->customer_phone}}</td>
                     <td>{{ $data->customer_agent}}</td>
                     <td>
-                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditModal('{{ $data->customer_id}}')" style="position: sticky;"><i class="fa fa-pen"></i></button>
-                        <a id="viewDetail" type="button" class="btn btn-primary" title="View Detail" href="{{ route('loan', ['id' => $data->customer_id]) }}" style="position: absolute; margin-left: 5px;"><i class="fa fa-eye"></i></a>
+                        <button id="editCustomer" type="button" class="btn btn-primary" title="Edit" onclick="showEditModal('{{ $data->customer_id}}')" style="position: sticky; margin-right:5px; margin-top: 5px;"><i class="fa fa-pen"></i></button>
+                        <a id="viewDetail" type="button" class="btn btn-primary" title="View Detail" href="{{ route('loan', ['id' => $data->customer_id]) }}" style="margin-top: 5px;"><i class="fa fa-eye"></i></a>
+                        <a id="deleteCustomer" type="button" class="btn btn-danger" title="Delete Customer" onclick="confirmDelete('{{ $data->customer_id}}')" style="margin-top: 5px;"><i class="fa fa-trash"></i></a>
                     </td>
                 </tr>
                 @endforeach
@@ -392,7 +393,7 @@
             keyup: function() {
                 formatCurrency($(this));
             },
-            blur: function() { 
+            blur: function() {
                 formatCurrency($(this), "blur");
             }
         });
@@ -405,19 +406,19 @@
         function formatCurrency(input, blur) {
             // appends $ to value, validates decimal side
             // and puts cursor back in right position.
-            
+
             // get input value
             var input_val = input.val();
-            
+
             // don't validate empty input
             if (input_val === "") { return; }
-            
+
             // original length
             var original_len = input_val.length;
 
-            // initial caret position 
+            // initial caret position
             var caret_pos = input.prop("selectionStart");
-                
+
             // check for decimal
             if (input_val.indexOf(".") >= 0) {
                 // get position of first decimal
@@ -434,12 +435,12 @@
 
                 // validate right side
                 right_side = formatNumber(right_side);
-                
+
                 // On blur make sure 2 numbers after decimal
                 if (blur === "blur") {
                 right_side += "00";
                 }
-                
+
                 // Limit decimal to only 2 digits
                 right_side = right_side.substring(0, 2);
 
@@ -452,13 +453,13 @@
                 // remove all non-digits
                 input_val = formatNumber(input_val);
                 input_val = input_val;
-                
+
                 // final formatting
                 if (blur === "blur") {
                 input_val += ".00";
                 }
             }
-            
+
             // send updated string to input
             input.val(input_val);
 
@@ -512,7 +513,7 @@
                 tenor = $('#tenor').val();
 
                 installmentAmount = loan * (1 + ((interestRate/100 * tenor)))/tenor;
-                
+
                 $('#installmentAmount').val(installmentAmount.toFixed(2));
                 formatCurrency($('#installmentAmount'));
             }
@@ -572,7 +573,7 @@
         {
             $('#modalCustomer').modal('show');
         }
-        
+
         function confirmCancel()
         {
             // $('#addCustomerForm')[0].reset();
@@ -580,7 +581,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to leave and discard changes?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -599,7 +600,7 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
@@ -623,7 +624,7 @@
                             .attr("name", "installmentAmount")
                             .attr("value", $('#installmentAmount').val())
                             .appendTo("#addCustomerForm");
-                            
+
                             $("<input />").attr("type", "hidden")
                             .attr("name", "provisionFee")
                             .attr("value", $('#provisionFee').val())
@@ -633,7 +634,7 @@
                             .attr("name", "disbursementAmount")
                             .attr("value", $('#disbursementAmount').val())
                             .appendTo("#addCustomerForm");
-                            
+
                             $('#addCustomerForm').submit();
                             return true;
                         }
@@ -679,10 +680,10 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to save this data?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
-                        action: function(){                            
+                        action: function(){
                             $('#editCustomerForm').submit();
                             return true;
                         }
@@ -701,11 +702,32 @@
             $.confirm({
                 title: 'Please Confirm',
                 content: 'Are you sure you want to leave and discard changes?',
-                buttons: {   
+                buttons: {
                     ok: {
                         btnClass: 'btn-primary',
                         action: function(){
                             $('#' + modalId).modal('hide');
+                        }
+                    },
+                    cancel: function(){
+                    }
+                }
+            });
+        }
+
+        function confirmDelete(id)
+        {
+            // $('#addCustomerForm')[0].reset();
+            var custId = id;
+            $.confirm({
+                title: 'Please Confirm',
+                content: 'Are you sure you want to delete this record?',
+                buttons: {
+                    ok: {
+                        btnClass: 'btn-primary',
+                        action: function(){
+                            var url = "{{ route('deleteCustomer') }}?id=" + id;
+                            window.location.href = url;
                         }
                     },
                     cancel: function(){
