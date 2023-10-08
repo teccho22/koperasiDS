@@ -67,8 +67,22 @@ class BussinesGrowthController extends Controller
 
     public function generateChart(Request $request)
     {
-        DB::connection()->enableQueryLog();
 
+        $resultId = DB::select("
+            SELECT
+                max(tam2.id) as id
+            FROM
+                trx_account_mgmt tam2
+            GROUP BY DATE_FORMAT(tam2.create_at, '%b')
+        ");
+
+        $ids = [];
+        foreach ($resultId as $id) {
+            array_push($ids, $id->id);
+        }
+
+
+        // DB::connection()->enableQueryLog();
         $sql = DB::table('trx_account_mgmt');
 
         if ($request->searchDateFrom)
@@ -82,6 +96,7 @@ class BussinesGrowthController extends Controller
 
         $result = $sql
                 ->where('trx_account_mgmt.is_active', 1)
+                ->whereIn('trx_account_mgmt.id', $ids)
                 ->select(DB::raw("ROUND(SUM(trx_account_mgmt.cash_account) + SUM(trx_account_mgmt.bank_account) +
                          (
                              SELECT
@@ -104,7 +119,7 @@ class BussinesGrowthController extends Controller
                         DB::raw("DATE_FORMAT(trx_account_mgmt.create_at, '%b-%Y') as month"))
                 ->groupBy(DB::raw("DATE_FORMAT(trx_account_mgmt.create_at, '%b-%Y')"))
                 ->get();
-        dd(DB::getQueryLog());
+        // dd(DB::getQueryLog());
         // dd($result);
 
         $totalAccount = [];
