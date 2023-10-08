@@ -19,10 +19,10 @@ class BussinesGrowthController extends Controller
         // DB::connection()->enableQueryLog();
         $result = DB::select("
             SELECT
-                ROUND(SUM(cash_account) + SUM(bank_account) + 
+                ROUND(SUM(tam.cash_account) + SUM(tam.bank_account) +
                 (
                     SELECT
-                        SUM( 
+                        SUM(
                             CASE
                                 WHEN i.loan_status = 'Not Fully Paid' THEN l.installment_amount - i.incoming_amount
                                 ELSE l.installment_amount
@@ -36,11 +36,20 @@ class BussinesGrowthController extends Controller
                         AND i.is_active = 1
                         AND i.loan_status <> 'PAID'
                 )
-                , 2) 
+                , 2)
                 as total_account,
-                DATE_FORMAT(create_at, '%b-%Y') as month
-            FROM trx_account_mgmt
-            GROUP BY DATE_FORMAT(create_at, '%b-%Y') 
+                DATE_FORMAT(tam.create_at, '%b-%Y') as month
+            FROM trx_account_mgmt tam
+            WHERE
+                id IN (
+                    SELECT
+                        max(tam2.id)
+                    FROM
+                        trx_account_mgmt tam2
+                    GROUP BY DATE_FORMAT(tam2.create_at, '%b')
+                )
+            GROUP BY DATE_FORMAT(tam.create_at, '%b-%Y')
+            ORDER BY tam.create_at
             LIMIT 12
         ");
         // dd(DB::getQueryLog());
@@ -58,6 +67,8 @@ class BussinesGrowthController extends Controller
 
     public function generateChart(Request $request)
     {
+        DB::connection()->enableQueryLog();
+
         $sql = DB::table('trx_account_mgmt');
 
         if ($request->searchDateFrom)
@@ -71,10 +82,10 @@ class BussinesGrowthController extends Controller
 
         $result = $sql
                 ->where('trx_account_mgmt.is_active', 1)
-                ->select(DB::raw("ROUND(SUM(trx_account_mgmt.cash_account) + SUM(trx_account_mgmt.bank_account) + 
+                ->select(DB::raw("ROUND(SUM(trx_account_mgmt.cash_account) + SUM(trx_account_mgmt.bank_account) +
                          (
                              SELECT
-                                 SUM( 
+                                 SUM(
                                      CASE
                                          WHEN i.loan_status = 'Not Fully Paid' THEN l.installment_amount - i.incoming_amount
                                          ELSE l.installment_amount
@@ -88,14 +99,14 @@ class BussinesGrowthController extends Controller
                                  AND i.is_active = 1
                                  AND i.loan_status <> 'PAID'
                          )
-                         , 2) 
+                         , 2)
                          as total_account"),
                         DB::raw("DATE_FORMAT(trx_account_mgmt.create_at, '%b-%Y') as month"))
                 ->groupBy(DB::raw("DATE_FORMAT(trx_account_mgmt.create_at, '%b-%Y')"))
                 ->get();
-        // dd(DB::getQueryLog());
+        dd(DB::getQueryLog());
         // dd($result);
-        
+
         $totalAccount = [];
         $month = [];
         foreach ($result as $totalCash) {
