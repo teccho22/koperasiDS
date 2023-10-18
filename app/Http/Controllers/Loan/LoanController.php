@@ -54,7 +54,6 @@ class LoanController extends Controller
                     'ms_loans.loan_id',
                     'ms_loans.customer_id',
                     'ms_loans.collateral_file_path',
-                    'ms_loans.loan_collect',
                     DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%Y-%b-%d") as loan_date')
                 )
                 ->orderBy('customer_id', 'asc')
@@ -74,7 +73,6 @@ class LoanController extends Controller
                     'ms_loans.loan_id',
                     'ms_loans.customer_id',
                     'ms_loans.collateral_file_path',
-                    'ms_loans.loan_collect',
                     DB::raw('DATE_FORMAT(ms_outgoings.outgoing_date, "%Y-%b-%d") as loan_date')
                 )
                 ->orderBy('customer_id', 'asc')
@@ -594,13 +592,14 @@ class LoanController extends Controller
 
     function payLoan(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'paymentDate'       => 'required',
             'payAmount'         => 'required',
             'loanId'            => 'required',
             'customerId'        => 'required'
         ]);
+
+        $paymentAmount = 0;
 
         if (!$validator->fails())
         {
@@ -645,6 +644,8 @@ class LoanController extends Controller
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
+
+                $paymentAmount = $request->payAmount;
             }
             else if (intval($outstanding) == 0)
             {
@@ -661,6 +662,8 @@ class LoanController extends Controller
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
+
+                $paymentAmount = $request->payAmount;
             }
             else if (intval($outstanding)  > 0)
             {
@@ -676,6 +679,8 @@ class LoanController extends Controller
                         AND loan_id = '$request->loanId'
                         AND is_active = 1
                 ");
+
+                $paymentAmount = $remainingOutstanding;
 
                 $incoming = DB::select("
                     SELECT
@@ -778,11 +783,11 @@ class LoanController extends Controller
                                 AND is_active = 1
                         ");
 
-                        $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
+                        $total = $cashAccount[0]->cash_account + $pay;
 
                         $transaction = DB::table('trx_account_mgmt')->insert([
                             'trx_category'      => 'Incoming',
-                            'trx_amount'        => $incomingStatus[0]->incoming_amount,
+                            'trx_amount'        => $pay,
                             'incoming_id'       => $incomingIds,
                             'cash_account'      => $total,
                             'bank_account'      => $cashAccount[0]->bank_account,
@@ -819,11 +824,11 @@ class LoanController extends Controller
                     AND is_active = 1
             ");
 
-            $total = $cashAccount[0]->cash_account + $incomingStatus[0]->incoming_amount;
+            $total = $cashAccount[0]->cash_account + $paymentAmount;
 
             $transaction = DB::table('trx_account_mgmt')->insert([
                 'trx_category'      => 'Incoming',
-                'trx_amount'        => $incomingStatus[0]->incoming_amount,
+                'trx_amount'        => $paymentAmount,
                 'incoming_id'       => $incomingId,
                 'cash_account'      => $total,
                 'bank_account'      => $cashAccount[0]->bank_account,
